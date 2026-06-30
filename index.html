@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiniela Liga MX · Apertura 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700;1,800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ════════════════════════════════════════════════════════════
+   QUINIELA LIGA MX · styles.css  v3.0
+   Diseño: Elegante, moderno, fiel a Liga MX
+   Paleta: Cian #60D8DF · Amarillo #FFF52D · Blanco #fff
+   Tipografía: Barlow Condensed (display) + Barlow (body)
+════════════════════════════════════════════════════════════ */
+
+/* ── Variables globales ── */
+:root {
+  --verde:         #60D8DF;
+  --verde-deep:    #1A6E73;
+  --verde-mid:     #3FC2C9;
+  --verde-lite:    #E5FBFC;
+  --dorado:        #FFF52D;
+  --dorado-dark:   #D4CC00;
+  --dorado-lite:   #FFFDE0;
+  --dorado-mid:    #FFF866;
+  --rojo:          #c0392b;
+  --blanco:        #ffffff;
+  --gris-bg:       #f2f5f3;
+  --gris-borde:    #e0e8e4;
+  --gris-texto:    #5a6b63;
+  --gris-dark:     #374740;
+  --negro:         #1a2620;
+
+  --sombra-card:   0 8px 40px rgba(96,216,223,.14), 0 2px 8px rgba(96,216,223,.08);
+  --sombra-fab:    0 6px 20px rgba(96,216,223,.5);
+  --radius:        16px;
+  --radius-sm:     10px;
+  --radius-xs:     6px;
+  --trans:         .22s cubic-bezier(.4,0,.2,1);
+  --font-cond:     'Barlow Condensed', sans-serif;
+  --font-body:     'Barlow', sans-serif;
+
+  /* Contorno negro tipo "stroke" para textos amarillos/azules */
+  --text-stroke:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0   -1.5px 0 #000,
+     0    1.5px 0 #000,
+    -1.5px 0   0 #000,
+     1.5px 0   0 #000;
+}
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--gris-bg);
+  font-family: var(--font-body);
+  color: var(--negro);
+  min-height: 100vh;
+  padding: 24px 16px 80px;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 85% 5%, rgba(96,216,223,.09) 0%, transparent 45%),
+    radial-gradient(ellipse at 8% 95%, rgba(255,245,45,.08) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MODAL
+════════════════════════════════════════════════════════════ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(3,18,10,.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-box {
+  position: relative;
+  background: var(--blanco);
+  border-radius: 22px;
+  padding: 36px 32px 28px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 28px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.06);
+  animation: modalIn .45s cubic-bezier(.34,1.4,.64,1) both;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(.78) translateY(24px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.modal-hexagon {
+  width: 68px;
+  height: 68px;
+  background: linear-gradient(135deg, var(--verde) 0%, var(--verde-mid) 100%);
+  clip-path: polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  box-shadow: 0 8px 24px rgba(96,216,223,.4);
+  animation: hexPulse 3s ease-in-out infinite;
+}
+
+@keyframes hexPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(96,216,223,.4); }
+  50% { transform: scale(1.04); box-shadow: 0 12px 32px rgba(96,216,223,.55); }
+}
+
+.modal-title-line1 {
+  display: block;
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--gris-texto);
+  text-transform: uppercase;
+}
+
+.modal-title-line2 {
+  display: block;
+  font-family: var(--font-cond);
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--verde);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  text-shadow: var(--text-stroke);
+}
+
+.modal-title-season {
+  display: block;
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--dorado);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  margin-bottom: 16px;
+  text-shadow: var(--text-stroke);
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--gris-texto);
+  margin-bottom: 18px;
+}
+
+.modal-input-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 17px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.modal-input-wrap input {
+  width: 100%;
+  padding: 13px 16px 13px 42px;
+  border: 2px solid var(--gris-borde);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--negro);
+  outline: none;
+  transition: border-color var(--trans), box-shadow var(--trans);
+  background: #fafcfb;
+}
+
+.modal-input-wrap input:focus {
+  border-color: var(--verde);
+  background: var(--blanco);
+  box-shadow: 0 0 0 4px rgba(96,216,223,.1);
+}
+
+.modal-input-wrap input::placeholder { color: #b0bdb8; }
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--verde) 0%, var(--verde-mid) 100%);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-cond);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--trans);
+  box-shadow: 0 4px 16px rgba(96,216,223,.38);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 100%);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(96,216,223,.5);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.modal-hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #aab5b0;
+  font-style: italic;
+}
+
+.modal-hint strong { color: var(--verde); font-style: normal; text-shadow: var(--text-stroke); }
+
+/* ════════════════════════════════════════════════════════════
+   TARJETA QUINIELA
+   CRÍTICO: Sin backdrop-filter, sin position:fixed interno.
+   html2canvas captura .quiniela limpiamente.
+════════════════════════════════════════════════════════════ */
+
+.quiniela {
+  background: var(--blanco);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--sombra-card);
+  border: 1.5px solid var(--gris-borde);
+  /* Ancho fijo para PNG consistente */
+  width: 100%;
+  max-width: 500px;
+}
+
+/* ── HEADER ── */
+.q-header {
+  background: var(--verde-deep);
+  color: var(--blanco);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón hexagonal de fondo (CSS puro, html2canvas lo soporta) */
+.q-header-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 18px,
+      rgba(255,245,45,.05) 18px,
+      rgba(255,245,45,.05) 19px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 18px,
+      rgba(255,245,45,.05) 18px,
+      rgba(255,245,45,.05) 19px
+    );
+  pointer-events: none;
+}
+
+/* Columna izquierda: Logo */
+.q-col-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.q-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  border: 2px solid rgba(255,245,45,.35);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.q-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+/* Columna central: título (con padding simétrico para centrado real) */
+.q-col-center {
+  text-align: center;
+}
+
+.q-season {
+  font-family: var(--font-cond);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+#tituloJornada {
+  font-family: var(--font-cond);
+  font-size: 30px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: var(--dorado);
+  line-height: 1;
+  text-shadow: var(--text-stroke);
+}
+
+.q-title-accent {
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dorado), transparent);
+  margin: 4px auto 0;
+}
+
+/* Columna derecha: jugador */
+.q-col-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.q-jugador-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,.5);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+#nombreJugador {
+  font-family: var(--font-cond);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--dorado);
+  text-transform: uppercase;
+  word-break: break-word;
+  max-width: 110px;
+  text-align: right;
+  line-height: 1.1;
+  text-shadow: var(--text-stroke);
+}
+
+/* Franja dorada */
+.q-stripe {
+  height: 5px;
+  background: var(--verde-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-stripe-inner {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--dorado-dark) 10%,
+    var(--dorado) 30%,
+    var(--dorado-mid) 50%,
+    var(--dorado) 70%,
+    var(--dorado-dark) 90%,
+    transparent 100%
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
+   PARTIDOS
+════════════════════════════════════════════════════════════ */
+.partidos-grid {
+  padding: 0;
+  background: var(--blanco);
+}
+
+.partido {
+  border-bottom: 1px solid var(--gris-borde);
+  padding: 10px 14px 14px;
+  position: relative;
+  background: var(--blanco);
+  /* Animación de entrada */
+  animation: fadeSlideUp .4s ease both;
+}
+
+.partido:last-child { border-bottom: none; }
+
+.partido:nth-child(odd) {
+  background: #fafcfb;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.partido:nth-child(1)  { animation-delay: .05s; }
+.partido:nth-child(2)  { animation-delay: .10s; }
+.partido:nth-child(3)  { animation-delay: .15s; }
+.partido:nth-child(4)  { animation-delay: .20s; }
+.partido:nth-child(5)  { animation-delay: .25s; }
+.partido:nth-child(6)  { animation-delay: .30s; }
+.partido:nth-child(7)  { animation-delay: .35s; }
+.partido:nth-child(8)  { animation-delay: .40s; }
+.partido:nth-child(9)  { animation-delay: .45s; }
+
+/* Número de partido */
+.partido-num {
+  position: absolute;
+  left: 14px;
+  top: 11px;
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dorado);
+  letter-spacing: .3px;
+  opacity: 0.9;
+  text-shadow: var(--text-stroke);
+}
+
+/* Fila info (fecha · hora · canal) — ahora debajo del marcador */
+.p-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding-left: 0;
+  flex-wrap: wrap;
+  min-height: 18px;
+}
+
+.p-fecha {
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gris-texto);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.p-hora {
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--verde-mid);
+  white-space: nowrap;
+  text-shadow: var(--text-stroke);
+}
+
+.p-sep {
+  color: var(--gris-borde);
+  font-size: 12px;
+}
+
+/* Canal */
+.p-canal-wrap {
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.canal-logo {
+  height: 20px;
+  width: auto;
+  max-width: 56px;
+  object-fit: contain;
+  display: block;
+}
+
+.canal-text {
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--verde-deep);
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  background: var(--verde-lite);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+/* Fila central del partido */
+.fila-partido {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Equipo */
+.equipo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.equipo img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  display: block;
+}
+
+.equipo-nombre {
+  font-family: var(--font-cond);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--gris-dark);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Score central */
+.score-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.score-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* SCORE EDITABLE
+   CRÍTICO: contenteditable se desactiva antes de exportar.
+   Sin outline complicado que confunda a html2canvas. */
+.score {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(96,216,223,.25);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-cond);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--verde);
+  cursor: text;
+  outline: none;
+  caret-color: var(--dorado);
+  -webkit-user-select: text;
+  user-select: text;
+  line-height: 1;
+  text-align: center;
+  background: var(--blanco);
+  transition: border-color var(--trans), background var(--trans), color var(--trans);
+  text-shadow: var(--text-stroke);
+}
+
+.score:focus {
+  border-color: var(--dorado);
+  background: var(--dorado-lite);
+  color: var(--gris-dark);
+  box-shadow: 0 0 0 3px rgba(255,245,45,.18);
+  text-shadow: none;
+}
+
+/* Divisor central entre scores */
+.score-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.score-divider-dash {
+  width: 14px;
+  height: 2px;
+  background: var(--gris-borde);
+  border-radius: 1px;
+}
+
+.vs-text {
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 900;
+  color: #ccc;
+  letter-spacing: 1.5px;
+}
+
+/* ── Footer de la tarjeta ── */
+.q-footer {
+  background: var(--verde-deep);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-cond);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.q-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.q-footer-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(255,255,255,.2);
+}
+
+.q-footer-right {
+  color: rgba(255,255,255,.4);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOTONES DE ACCIÓN (fuera de la tarjeta)
+════════════════════════════════════════════════════════════ */
+.acciones {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-accion {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--trans);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-accion::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.1) 0%, transparent 100%);
+}
+
+.btn-guardar {
+  background: linear-gradient(135deg, var(--verde) 0%, var(--verde-mid) 100%);
+  color: var(--blanco);
+  box-shadow: 0 4px 16px rgba(96,216,223,.35);
+}
+
+.btn-guardar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(96,216,223,.5);
+}
+
+.btn-guardar:active { transform: translateY(0); }
+
+.btn-compartir {
+  background: linear-gradient(135deg, var(--dorado-dark) 0%, var(--dorado-mid) 100%);
+  color: #3a2200;
+  box-shadow: 0 4px 16px rgba(255,245,45,.35);
+}
+
+.btn-compartir:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255,245,45,.5);
+}
+
+.btn-compartir:active { transform: translateY(0); }
+
+/* ════════════════════════════════════════════════════════════
+   TOAST (notificación)
+════════════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--verde-deep);
+  color: var(--blanco);
+  font-family: var(--font-cond);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 100px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s, transform .3s;
+  z-index: 9999;
+  white-space: nowrap;
+  max-width: calc(100vw - 48px);
+  text-align: center;
+  border: 1px solid rgba(255,245,45,.3);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ════════════════════════════════════════════════════════════
+   FAB ADMIN
+════════════════════════════════════════════════════════════ */
+.admin-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--verde) 0%, var(--verde-mid) 100%);
+  color: var(--blanco);
+  border: 2px solid rgba(255,245,45,.4);
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 8000;
+  box-shadow: var(--sombra-fab);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--trans);
+}
+
+.admin-fab:hover {
+  transform: scale(1.1) rotate(30deg);
+  box-shadow: 0 10px 28px rgba(96,216,223,.65);
+}
+
+.admin-fab:active { transform: scale(1); }
+
+/* ════════════════════════════════════════════════════════════
+   PANEL ADMIN
+   Controlado 100% por JS con style.display. Sin admin-only.
+════════════════════════════════════════════════════════════ */
+.admin-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 92px;
+  width: 308px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  background: #111d17;
+  border: 1px solid rgba(255,245,45,.18);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04);
+  z-index: 8500;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 14px;
+  animation: panelIn .25s cubic-bezier(.34,1.25,.64,1) both;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(16px) scale(.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ap-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,245,45,.06);
+  flex-shrink: 0;
+}
+
+.ap-header-icon { font-size: 22px; line-height: 1; }
+
+.ap-header-text { flex: 1; }
+
+.ap-header-text h3 {
+  font-family: var(--font-cond);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--blanco);
+  letter-spacing: .5px;
+  line-height: 1.1;
+}
+
+.ap-header-text span {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+  letter-spacing: .3px;
+}
+
+.ap-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: none;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--trans), color var(--trans);
+  flex-shrink: 0;
+}
+
+.ap-close:hover {
+  background: rgba(255,255,255,.18);
+  color: var(--blanco);
+}
+
+/* Cuerpo scrollable */
+.ap-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 12px;
+}
+
+.ap-body::-webkit-scrollbar { width: 4px; }
+.ap-body::-webkit-scrollbar-track { background: transparent; }
+.ap-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+
+.ap-section { padding: 14px 16px 6px; }
+.ap-danger-section { padding-top: 10px; }
+
+.ap-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,.06);
+  margin: 8px 0;
+}
+
+.ap-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.38);
+  margin-bottom: 7px;
+  margin-top: 12px;
+}
+
+.ap-label:first-child { margin-top: 0; }
+.ap-label-danger { color: rgba(192,57,43,.7); }
+
+.ap-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ap-input-row .ap-input { flex: 1; }
+
+.ap-btn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-xs);
+  background: var(--verde);
+  border: none;
+  color: var(--blanco);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--trans);
+}
+
+.ap-btn-icon:hover { background: var(--verde-mid); }
+
+.ap-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ap-form-col { display: flex; flex-direction: column; }
+.ap-form-col .ap-label { margin-top: 0; }
+
+.ap-input,
+.ap-select {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: var(--radius-xs);
+  border: 1.5px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06);
+  color: var(--blanco);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color var(--trans), background var(--trans);
+  appearance: auto;
+}
+
+.ap-input:focus,
+.ap-select:focus {
+  border-color: var(--dorado);
+  background: rgba(255,245,45,.06);
+}
+
+.ap-input::placeholder { color: rgba(255,255,255,.25); }
+.ap-select option { background: #111d17; color: var(--blanco); }
+
+.ap-partido-form {
+  padding: 0 16px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  margin-top: 10px;
+  padding-top: 12px;
+}
+
+.ap-btn-danger {
+  width: 100%;
+  padding: 10px;
+  background: rgba(192,57,43,.2);
+  border: 1px solid rgba(192,57,43,.4);
+  color: #e57373;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-cond);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--trans);
+}
+
+.ap-btn-danger:hover {
+  background: rgba(192,57,43,.4);
+  border-color: rgba(192,57,43,.7);
+  color: #ff8a80;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ESTADO MODO IMAGEN (antes de exportar PNG)
+   Estos estilos eliminan elementos visuales que confunden
+   a html2canvas: outlines, carets, shadows de focus.
+════════════════════════════════════════════════════════════ */
+.modo-imagen .score {
+  border-color: rgba(96,216,223,.25) !important;
+  background: var(--blanco) !important;
+  color: var(--verde) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  caret-color: transparent !important;
+  text-shadow: var(--text-stroke) !important;
+}
+
+.modo-imagen .partido:nth-child(odd) {
+  background: #fafcfb !important;
+}
+
+.modo-imagen .partido {
+  animation: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE — MÓVIL
+════════════════════════════════════════════════════════════ */
+@media (max-width: 520px) {
+  body { padding: 12px 8px 90px; }
+
+  .q-header { gap: 8px; padding: 12px 12px; }
+  #tituloJornada { font-size: 24px; }
+  .q-logo-wrap { width: 40px; height: 40px; }
+
+  .equipo { width: 66px; }
+  .equipo img { width: 48px; height: 48px; }
+  .equipo-nombre { font-size: 9px; max-width: 62px; }
+
+  .score { width: 42px; height: 42px; font-size: 24px; }
+
+  .acciones { flex-direction: column; }
+
+  .admin-panel {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    bottom: 88px;
+    max-height: 70vh;
+  }
+
+  #nombreJugador { font-size: 14px; max-width: 90px; }
+}
+
+@media (max-width: 360px) {
+  .q-col-center { grid-column: unset; }
+  .equipo { width: 58px; }
+  .score { width: 38px; height: 38px; font-size: 21px; }
+}
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════
+       MODAL: NOMBRE DEL JUGADOR
+  ══════════════════════════════════════════ -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <div class="modal-overlay"></div>
+    <div class="modal-box">
+      <div class="modal-logo">
+        <div class="modal-hexagon">
+          <span>⚽</span>
+        </div>
+      </div>
+      <h2 id="modal-titulo">
+        <span class="modal-title-line1">QUINIELA</span>
+        <span class="modal-title-line2">LIGA MX</span>
+        <span class="modal-title-season">Apertura 2026</span>
+      </h2>
+      <p class="modal-subtitle">Ingresa tu nombre para comenzar</p>
+      <div class="modal-input-wrap">
+        <div class="input-icon">👤</div>
+        <input
+          type="text"
+          id="inputNombre"
+          placeholder="Tu nombre aquí…"
+          maxlength="30"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+      <button id="btnContinuar" class="btn-primary">
+        <span>COMENZAR</span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+      <p class="modal-hint">¿Admin? Ingresa <strong>omar</strong></p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FAB ADMIN
+  ══════════════════════════════════════════ -->
+  <button
+    id="btnAbrirAdmin"
+    class="admin-fab"
+    style="display:none;"
+    title="Panel administrador"
+    onclick="togglePanelAdmin()"
+    aria-label="Abrir panel de administrador"
+  >
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- ══════════════════════════════════════════
+       PANEL ADMIN
+  ══════════════════════════════════════════ -->
+  <div id="adminPanel" class="admin-panel" style="display:none;" aria-hidden="true">
+    <div class="ap-header">
+      <div class="ap-header-icon">⚙️</div>
+      <div class="ap-header-text">
+        <h3>Panel Admin</h3>
+        <span>Liga MX v5</span>
+      </div>
+      <button class="ap-close" title="Cerrar" onclick="togglePanelAdmin()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="ap-body">
+      <!-- Título de la jornada -->
+      <div class="ap-section">
+        <label class="ap-label">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Título de la jornada
+        </label>
+        <div class="ap-input-row">
+          <input type="text" id="adminTitulo" class="ap-input" placeholder="APERTURA 2026 · J1">
+          <button class="ap-btn-icon" onclick="guardarTitulo()" title="Aplicar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="ap-divider"></div>
+
+      <!-- Selección de partido -->
+      <div class="ap-section">
+        <label class="ap-label">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Editar partido
+        </label>
+        <select id="adminPartidoSel" class="ap-select" onchange="cargarPartidoEnPanel()">
+          <option value="">— Selecciona partido —</option>
+        </select>
+      </div>
+
+      <!-- Formulario edición partido -->
+      <div id="adminPartidoForm" class="ap-partido-form" style="display:none;">
+        <div class="ap-form-grid">
+          <div class="ap-form-col">
+            <label class="ap-label">Fecha</label>
+            <input type="date" id="apFecha" class="ap-input" onchange="aplicarCampoPartido()">
+          </div>
+          <div class="ap-form-col">
+            <label class="ap-label">Hora</label>
+            <input type="time" id="apHora" class="ap-input" onchange="aplicarCampoPartido()">
+          </div>
+        </div>
+
+        <label class="ap-label">Equipo Local</label>
+        <select id="apLocal" class="ap-select" onchange="aplicarCampoPartido()"></select>
+
+        <label class="ap-label">Equipo Visitante</label>
+        <select id="apVisita" class="ap-select" onchange="aplicarCampoPartido()"></select>
+
+        <label class="ap-label">Canal</label>
+        <select id="apCanal" class="ap-select" onchange="aplicarCampoPartido()"></select>
+      </div>
+
+      <div class="ap-divider"></div>
+
+      <!-- Peligro -->
+      <div class="ap-section ap-danger-section">
+        <label class="ap-label ap-label-danger">Zona de peligro</label>
+        <button class="ap-btn-danger" onclick="resetearTodo()">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Resetear todo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TARJETA QUINIELA PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <main>
+    <div class="quiniela" id="quiniela">
+
+      <!-- HEADER -->
+      <header class="q-header">
+        <div class="q-header-bg"></div>
+
+        <div class="q-col-left">
+          <!-- Logo circular -->
+          <div class="q-logo-wrap">
+            <img src="assets/OH.jpeg" alt="Logo" title="Logo" onerror="this.style.display='none';">
+          </div>
+        </div>
+
+        <div class="q-col-center">
+          <p class="q-season">APERTURA 26</p>
+          <h1 id="tituloJornada">JORNADA 1</h1>
+          <div class="q-title-accent"></div>
+        </div>
+
+        <div class="q-col-right">
+          <span class="q-jugador-label">Quiniela de</span>
+          <strong id="nombreJugador">—</strong>
+        </div>
+      </header>
+
+      <!-- Franja dorada -->
+      <div class="q-stripe">
+        <div class="q-stripe-inner"></div>
+      </div>
+
+      <!-- PARTIDOS -->
+      <div id="contenedor-partidos" class="partidos-grid"></div>
+
+      <!-- FOOTER -->
+      <footer class="q-footer">
+        <div class="q-footer-left">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" opacity="0.6">
+            <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 6l1.5 3h3l-2.5 1.8 1 3L10 12l-3 1.8 1-3L5.5 9h3z" fill="currentColor"/>
+          </svg>
+          <span>Liga MX v5</span>
+        </div>
+        <div class="q-footer-sep"></div>
+        <div class="q-footer-right">
+          <span id="q-fecha-gen"></span>
+        </div>
+      </footer>
+
+    </div><!-- /.quiniela -->
+
+    <!-- BOTONES DE ACCIÓN (fuera del PNG) -->
+    <div class="acciones" id="acciones">
+      <button id="btnGuardar" class="btn-accion btn-guardar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Guardar PNG</span>
+      </button>
+      <button id="btnCompartir" class="btn-accion btn-compartir" style="display:none;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        <span>Compartir</span>
+      </button>
+    </div>
+
+    <!-- Toast de notificación -->
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+  </main>
+
+  <!-- html2canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- 🔥 Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <script>
+/**
+ * ════════════════════════════════════════════════════════════
+ *  QUINIELA LIGA MX · script.js  v3.0 (instancia v5)
+ *
+ *  Arquitectura:
+ *  1. Datos (equipos, canales, partidos por defecto)
+ *  2. Estado global
+ *  3. Utilidades (logos, formato de fechas)
+ *  4. Persistencia (Firebase, aislado por QUINIELA_ID)
+ *  5. Render de partidos
+ *  6. Eventos de scores (contenteditable)
+ *  7. Modal de login + Modo Admin
+ *  8. Panel Admin (toggle sin conflictos CSS)
+ *  9. Exportación PNG (estrategia robusta para html2canvas)
+ * 10. Compartir (Web Share API)
+ * 11. Inicialización
+ * ════════════════════════════════════════════════════════════
+ */
+
+'use strict';
+
+// ==================== 🔥 CONFIGURACIÓN FIREBASE ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyAtZpRO-Gy59prAeKjpaAs_p-qqxuM9jMo",
+  authDomain: "quiniela-3c8fa.firebaseapp.com",
+  projectId: "quiniela-3c8fa",
+  storageBucket: "quiniela-3c8fa.firebasestorage.app",
+  messagingSenderId: "321094792504",
+  appId: "1:321094792504:web:532ba43015d1557a7cfdcd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ==================== 🔑 AISLAMIENTO DE INSTANCIA ====================
+// Identificador único de esta quiniela. Cámbialo (v1, v2, v3, v4, v5…)
+// para que cada copia del sitio tenga su propio documento en Firestore
+// y su propia clave de localStorage, sin pisar a las demás.
+const QUINIELA_ID = 'v5';
+
+/* ══════════════════════════════════════════════════════════
+   1. DATOS
+══════════════════════════════════════════════════════════ */
+
+/** Los 18 equipos de la Liga MX Apertura 2026 */
+const EQUIPOS = [
+  { id: 'america',           nombre: 'América',           short: 'AME' },
+  { id: 'atlante',           nombre: 'Atlante',           short: 'ATE' },
+  { id: 'atlas',             nombre: 'Atlas',             short: 'ATL' },
+  { id: 'atletico-san-luis', nombre: 'At. San Luis',      short: 'ASL' },
+  { id: 'chivas',            nombre: 'Chivas',            short: 'GDL' },
+  { id: 'cruz-azul',         nombre: 'Cruz Azul',         short: 'CAZ' },
+  { id: 'fc-juarez',         nombre: 'FC Juárez',         short: 'FCJ' },
+  { id: 'leon',              nombre: 'León',              short: 'LEO' },
+  { id: 'monterrey',         nombre: 'Monterrey',         short: 'MTY' },
+  { id: 'necaxa',            nombre: 'Necaxa',            short: 'NEX' },
+  { id: 'pachuca',           nombre: 'Pachuca',           short: 'PAC' },
+  { id: 'puebla',            nombre: 'Puebla',            short: 'PUE' },
+  { id: 'pumas',             nombre: 'Pumas UNAM',        short: 'PUM' },
+  { id: 'queretaro',         nombre: 'Querétaro',         short: 'QRO' },
+  { id: 'santos',            nombre: 'Santos Laguna',     short: 'SAN' },
+  { id: 'tigres',            nombre: 'Tigres UANL',       short: 'TIG' },
+  { id: 'tijuana',           nombre: 'Xolos Tijuana',     short: 'TIJ' },
+  { id: 'toluca',            nombre: 'Toluca',            short: 'TOL' },
+];
+
+/** Canales de transmisión Liga MX */
+const CANALES = [
+  { id: 'tudn',    nombre: 'TUDN'             },
+  { id: 'fox',     nombre: 'FOX Sports'       },
+  { id: 'espn',    nombre: 'ESPN'             },
+  { id: 'azteca', nombre: 'Azteca Deportes'  },
+  { id: 'claro',   nombre: 'Claro Sports'     },
+  { id: 'canal5',  nombre: 'Canal 5'          },
+  { id: 'vix',     nombre: 'ViX'              },
+  { id: 'amazon',  nombre: 'Amazon Prime'     },
+];
+
+/** 9 partidos por defecto (el admin puede sobreescribirlos) */
+const PARTIDOS_DEFAULT = [
+  { local: 'america',           visita: 'chivas',            fecha: '', hora: '', canal: 'tudn'   },
+  { local: 'monterrey',         visita: 'tigres',            fecha: '', hora: '', canal: 'fox'    },
+  { local: 'cruz-azul',         visita: 'pumas',             fecha: '', hora: '', canal: 'espn'   },
+  { local: 'pachuca',           visita: 'leon',              fecha: '', hora: '', canal: 'tudn'   },
+  { local: 'santos',            visita: 'toluca',            fecha: '', hora: '', canal: 'azteca' },
+  { local: 'atlas',             visita: 'tijuana',           fecha: '', hora: '', canal: 'fox'    },
+  { local: 'puebla',            visita: 'queretaro',         fecha: '', hora: '', canal: 'claro'  },
+  { local: 'necaxa',            visita: 'fc-juarez',         fecha: '', hora: '', canal: 'tudn'   },
+  { local: 'chivas',            visita: 'atletico-san-luis', fecha: '', hora: '', canal: 'canal5' },
+];
+
+/** Clave de localStorage, aislada por instancia (QUINIELA_ID) */
+const LS_KEY = `quiniela_ligamx_${QUINIELA_ID}`;
+
+/* ══════════════════════════════════════════════════════════
+   2. ESTADO GLOBAL
+══════════════════════════════════════════════════════════ */
+let isAdmin      = false;
+let panelAbierto = false;
+
+/* ══════════════════════════════════════════════════════════
+   3. UTILIDADES
+══════════════════════════════════════════════════════════ */
+
+/**
+ * Ruta al logo de un equipo.
+ * Coloca los archivos PNG en: assets/equipos/<id>.png
+ * Si no existe, el onerror del <img> usará el fallback.
+ */
+const logoEquipo  = id => `assets/equipos/${id}.jpeg`;
+
+/**
+ * Ruta al logo de un canal.
+ * Coloca los archivos PNG en: assets/canales/<id>.png
+ */
+const logoCanal   = id => `assets/canales/${id}.png`;
+
+const shortEquipo  = id => (EQUIPOS.find(e => e.id === id) || {}).short  || id.toUpperCase().slice(0, 3);
+const nombreEquipo = id => (EQUIPOS.find(e => e.id === id) || {}).nombre || id;
+const nombreCanal  = id => (CANALES.find(c => c.id === id) || {}).nombre || id.toUpperCase();
+
+/** "2025-02-14" → "VIE 14 FEB" */
+function formatFecha(iso) {
+  if (!iso) return 'Por definir';
+  // Usar T12:00:00 para evitar desfase de zona horaria
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('es-MX', {
+    weekday: 'short', day: 'numeric', month: 'short',
+  }).replace(/\./g, '').toUpperCase();
+}
+
+/** "20:00" → "20:00 h" */
+const formatHora = t => t ? t + ' h' : '';
+
+/** Muestra un toast temporal */
+function toast(msg, duracion = 2800) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), duracion);
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. PERSISTENCIA CON FIREBASE (GLOBAL, AISLADA POR QUINIELA_ID)
+══════════════════════════════════════════════════════════ */
+
+async function cargarDatosAdmin() {
+  try {
+    const doc = await db.collection("quiniela").doc(`config-${QUINIELA_ID}`).get();
+    return doc.exists ? doc.data() : null;
+  } catch (e) {
+    console.log("Usando datos locales (primera vez)");
+    return null;
+  }
+}
+
+async function guardarDatosAdmin(data) {
+  try {
+    await db.collection("quiniela").doc(`config-${QUINIELA_ID}`).set(data);
+    toast("✅ Cambios guardados en la nube (visibles para todos)");
+  } catch (e) {
+    console.error(e);
+    toast("❌ Error al guardar en la nube");
+  }
+}
+
+/** Captura el estado actual de los partidos del DOM */
+function obtenerEstadoActual() {
+  const partidos = Array.from(document.querySelectorAll('.partido')).map(p => ({
+    local:  p.dataset.local,
+    visita: p.dataset.visita,
+    canal:  p.dataset.canal,
+    fecha:  p.dataset.fecha,
+    hora:   p.dataset.hora,
+  }));
+  return {
+    titulo: document.getElementById('tituloJornada').textContent.trim(),
+    partidos,
+  };
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. RENDER DE PARTIDOS
+══════════════════════════════════════════════════════════ */
+
+function renderPartidos(datos) {
+  const contenedor = document.getElementById('contenedor-partidos');
+  contenedor.innerHTML = '';
+
+  datos.forEach((p, i) => {
+    const nombreLocal  = nombreEquipo(p.local);
+    const nombreVisita = nombreEquipo(p.visita);
+    const shortLocal   = shortEquipo(p.local);
+    const shortVisita  = shortEquipo(p.visita);
+    const nomCanal     = nombreCanal(p.canal || 'tudn');
+
+    const div = document.createElement('div');
+    div.className    = 'partido';
+    div.dataset.idx  = i;
+    div.dataset.local  = p.local;
+    div.dataset.visita = p.visita;
+    div.dataset.canal  = p.canal  || 'tudn';
+    div.dataset.fecha  = p.fecha  || '';
+    div.dataset.hora   = p.hora   || '';
+
+    div.innerHTML = `
+      <span class="partido-num">${i + 1}</span>
+
+      <!-- Fila: equipo local · scores · equipo visitante -->
+      <div class="fila-partido">
+
+        <div class="equipo equipo-local">
+          <img
+            src="${logoEquipo(p.local)}"
+            alt="${nombreLocal}"
+            title="${nombreLocal}"
+            onerror="
+              if (!this.dataset.fallback) {
+                this.dataset.fallback = '1';
+                this.src = 'assets/equipos/default.png';
+              } else {
+                this.style.display='none';
+                this.nextElementSibling.style.display='block';
+              }
+            "
+          >
+          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--verde);">${shortLocal}</span>
+          <span class="equipo-nombre">${shortLocal}</span>
+        </div>
+
+        <div class="score-zone">
+          <div class="score-wrap">
+            <div
+              class="score"
+              contenteditable="true"
+              inputmode="numeric"
+              role="spinbutton"
+              aria-label="Goles ${nombreLocal} partido ${i + 1}"
+              data-partido="${i}"
+              data-tipo="local"
+            >0</div>
+          </div>
+
+          <div class="score-divider">
+            <div class="score-divider-dash"></div>
+            <span class="vs-text">VS</span>
+            <div class="score-divider-dash"></div>
+          </div>
+
+          <div class="score-wrap">
+            <div
+              class="score"
+              contenteditable="true"
+              inputmode="numeric"
+              role="spinbutton"
+              aria-label="Goles ${nombreVisita} partido ${i + 1}"
+              data-partido="${i}"
+              data-tipo="visita"
+            >0</div>
+          </div>
+        </div>
+
+        <div class="equipo equipo-visita">
+          <img
+            src="${logoEquipo(p.visita)}"
+            alt="${nombreVisita}"
+            title="${nombreVisita}"
+            onerror="
+              if (!this.dataset.fallback) {
+                this.dataset.fallback = '1';
+                this.src = 'assets/equipos/default.png';
+              } else {
+                this.style.display='none';
+                this.nextElementSibling.style.display='block';
+              }
+            "
+          >
+          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--verde);">${shortVisita}</span>
+          <span class="equipo-nombre">${shortVisita}</span>
+        </div>
+
+      </div>
+
+      <!-- Fila: fecha, hora, canal (debajo del marcador) -->
+      <div class="p-info-row">
+        <span class="p-fecha">${formatFecha(p.fecha)}</span>
+        ${p.hora
+          ? `<span class="p-sep">·</span><span class="p-hora">${formatHora(p.hora)}</span>`
+          : ''
+        }
+        <div class="p-canal-wrap">
+          <img
+            class="canal-logo"
+            src="${logoCanal(p.canal || 'tudn')}"
+            alt="${nomCanal}"
+            title="${nomCanal}"
+            onerror="
+              this.style.display='none';
+              this.nextElementSibling.style.display='inline-block';
+            "
+          >
+          <span class="canal-text" style="display:none;">${nomCanal}</span>
+        </div>
+      </div>
+    `;
+
+    contenedor.appendChild(div);
+  });
+
+  activarEventosScore();
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. EVENTOS SCORES
+══════════════════════════════════════════════════════════ */
+
+function activarEventosScore() {
+  document.querySelectorAll('.score').forEach(score => {
+
+    /** Filtra solo dígitos, máximo 2 */
+    score.addEventListener('input', () => {
+      const limpio = score.textContent.replace(/\D/g, '').slice(0, 2);
+      if (score.textContent !== limpio) {
+        score.textContent = limpio || '0';
+        moverCursorAlFinal(score);
+      }
+    });
+
+    /** Al enfocar, borra el 0 inicial */
+    score.addEventListener('focus', () => {
+      if (score.textContent === '0') {
+        score.textContent = '';
+      }
+    });
+
+    /** Al perder foco, restaura 0 si quedó vacío */
+    score.addEventListener('blur', () => {
+      if (!score.textContent.trim()) {
+        score.textContent = '0';
+      }
+    });
+
+    /** Bloquea teclas no numéricas */
+    score.addEventListener('keydown', e => {
+      const ok = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+      if (!ok.includes(e.key) && !/^\d$/.test(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        score.blur();
+      }
+    });
+
+    /** Bloquea pegado con formato */
+    score.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData('text');
+      const num = txt.replace(/\D/g, '').slice(0, 2);
+      document.execCommand('insertText', false, num);
+    });
+
+  });
+}
+
+function moverCursorAlFinal(el) {
+  if (!el.textContent.length) return;
+  const sel   = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. MODAL DE LOGIN
+══════════════════════════════════════════════════════════ */
+
+const modal         = document.getElementById('modal');
+const inputNombre   = document.getElementById('inputNombre');
+const nombreJugador = document.getElementById('nombreJugador');
+const btnContinuar  = document.getElementById('btnContinuar');
+
+inputNombre.addEventListener('keydown', e => {
+  if (e.key === 'Enter') btnContinuar.click();
+});
+
+inputNombre.addEventListener('input', () => {
+  inputNombre.style.borderColor = '';
+});
+
+btnContinuar.addEventListener('click', () => {
+  const nombre = inputNombre.value.trim();
+
+  if (!nombre) {
+    inputNombre.style.borderColor = '#c0392b';
+    inputNombre.focus();
+    toast('⚠️ Por favor ingresa tu nombre');
+    return;
+  }
+
+  nombreJugador.textContent = nombre.toUpperCase();
+  modal.style.display = 'none';
+
+  // ¿Es el admin?
+  if (nombre.toLowerCase() === 'omar') {
+    setTimeout(() => {
+      const pass = prompt('🔐 Contraseña de administrador:');
+      if (pass === 'admin_omar') {
+        activarAdmin();
+      } else if (pass !== null) {
+        toast('❌ Contraseña incorrecta');
+      }
+    }, 200);
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   8. MODO ADMIN + PANEL
+══════════════════════════════════════════════════════════ */
+
+function activarAdmin() {
+  isAdmin = true;
+  document.body.classList.add('admin');
+
+  // Mostrar FAB
+  document.getElementById('btnAbrirAdmin').style.display = 'flex';
+
+  // Rellenar selectores
+  llenarSelectorPartidos();
+  llenarSelectorEquipos();
+  llenarSelectorCanales();
+
+  toast('✅ Modo administrador activado (Liga MX v5)');
+}
+
+/**
+ * Toggle del panel admin.
+ * CRÍTICO: Usa style.display directamente para evitar conflictos
+ * con cualquier regla CSS que tenga display:none !important.
+ */
+function togglePanelAdmin() {
+  const panel = document.getElementById('adminPanel');
+
+  if (panelAbierto) {
+    // CERRAR
+    panel.style.display = 'none';
+    panel.setAttribute('aria-hidden', 'true');
+    panelAbierto = false;
+  } else {
+    // ABRIR con animación
+    panel.style.display = 'flex';
+    panel.setAttribute('aria-hidden', 'false');
+    // Forzar reflow para reiniciar la animación CSS
+    void panel.offsetWidth;
+    panel.style.animation = 'none';
+    void panel.offsetWidth;
+    panel.style.animation = '';
+    panelAbierto = true;
+  }
+}
+
+// Exponer globalmente (se llama desde atributos onclick en el HTML)
+window.togglePanelAdmin = togglePanelAdmin;
+
+/* ── Selectores del panel ── */
+
+function llenarSelectorPartidos() {
+  const sel = document.getElementById('adminPartidoSel');
+  sel.innerHTML = '<option value="">— Selecciona partido —</option>';
+  for (let i = 0; i < 9; i++) {
+    const p   = document.querySelectorAll('.partido')[i];
+    const loc = p ? shortEquipo(p.dataset.local)  : `Local ${i + 1}`;
+    const vis = p ? shortEquipo(p.dataset.visita) : `Visita ${i + 1}`;
+    const opt = document.createElement('option');
+    opt.value       = i;
+    opt.textContent = `${i + 1}. ${loc} vs ${vis}`;
+    sel.appendChild(opt);
+  }
+}
+
+function llenarSelectorEquipos() {
+  ['apLocal', 'apVisita'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    // Ordenar alfabéticamente por nombre
+    [...EQUIPOS].sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach(e => {
+      const opt = document.createElement('option');
+      opt.value       = e.id;
+      opt.textContent = e.nombre;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function llenarSelectorCanales() {
+  const sel = document.getElementById('apCanal');
+  if (!sel) return;
+  sel.innerHTML = '';
+  CANALES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value       = c.id;
+    opt.textContent = c.nombre;
+    sel.appendChild(opt);
+  });
+}
+
+/* ── Cargar partido en el formulario ── */
+function cargarPartidoEnPanel() {
+  const idx  = document.getElementById('adminPartidoSel').value;
+  const form = document.getElementById('adminPartidoForm');
+
+  if (idx === '') {
+    form.style.display = 'none';
+    return;
+  }
+
+  form.style.display = 'block';
+
+  const partido = document.querySelectorAll('.partido')[parseInt(idx)];
+  if (!partido) return;
+
+  document.getElementById('apFecha').value  = partido.dataset.fecha  || '';
+  document.getElementById('apHora').value   = partido.dataset.hora   || '';
+  document.getElementById('apLocal').value  = partido.dataset.local  || '';
+  document.getElementById('apVisita').value = partido.dataset.visita || '';
+  document.getElementById('apCanal').value  = partido.dataset.canal  || 'tudn';
+}
+
+window.cargarPartidoEnPanel = cargarPartidoEnPanel;
+
+/* ── Aplicar cambios al partido ── */
+function aplicarCampoPartido() {
+  const idx = parseInt(document.getElementById('adminPartidoSel').value);
+  if (isNaN(idx)) return;
+
+  const partido = document.querySelectorAll('.partido')[idx];
+  if (!partido) return;
+
+  const fecha  = document.getElementById('apFecha').value;
+  const hora   = document.getElementById('apHora').value;
+  const local  = document.getElementById('apLocal').value;
+  const visita = document.getElementById('apVisita').value;
+  const canal  = document.getElementById('apCanal').value;
+
+  // Preservar scores actuales
+  const scores      = partido.querySelectorAll('.score');
+  const scoreLocal  = scores[0]?.textContent || '0';
+  const scoreVisita = scores[1]?.textContent || '0';
+
+  // Actualizar datos en dataset
+  partido.dataset.fecha  = fecha;
+  partido.dataset.hora   = hora;
+  partido.dataset.local  = local;
+  partido.dataset.visita = visita;
+  partido.dataset.canal  = canal;
+
+  /* ── Actualizar DOM de la fila info ── */
+  const fechaEl = partido.querySelector('.p-fecha');
+  const horaEl  = partido.querySelector('.p-hora');
+  const sepEl   = partido.querySelector('.p-sep');
+  const canalImg = partido.querySelector('.canal-logo');
+  const canalTxt = partido.querySelector('.canal-text');
+
+  if (fechaEl) fechaEl.textContent = formatFecha(fecha);
+
+  if (hora) {
+    if (horaEl) {
+      horaEl.textContent = formatHora(hora);
+      horaEl.style.display = '';
+      if (sepEl) sepEl.style.display = '';
+    } else {
+      // Crear elementos de hora si no existían
+      const sep = document.createElement('span');
+      sep.className   = 'p-sep';
+      sep.textContent = '·';
+      const h = document.createElement('span');
+      h.className   = 'p-hora';
+      h.textContent = formatHora(hora);
+      if (fechaEl) fechaEl.after(sep, h);
+    }
+  } else if (horaEl) {
+    horaEl.style.display = 'none';
+    if (sepEl) sepEl.style.display = 'none';
+  }
+
+  if (canalImg) {
+    canalImg.src   = logoCanal(canal);
+    canalImg.alt   = nombreCanal(canal);
+    canalImg.title = nombreCanal(canal);
+    canalImg.style.display = 'block';
+    if (canalTxt) canalTxt.style.display = 'none';
+  }
+
+  /* ── Actualizar logos y nombres de equipos ── */
+  const localImgs  = partido.querySelectorAll('.equipo-local  img');
+  const visitaImgs = partido.querySelectorAll('.equipo-visita img');
+  const localFall  = partido.querySelector('.equipo-local  .equipo-fallback');
+  const visitaFall = partido.querySelector('.equipo-visita .equipo-fallback');
+  const localNom   = partido.querySelector('.equipo-local  .equipo-nombre');
+  const visitaNom  = partido.querySelector('.equipo-visita .equipo-nombre');
+
+  if (localImgs[0]) {
+    delete localImgs[0].dataset.fallback;
+    localImgs[0].src    = logoEquipo(local);
+    localImgs[0].alt    = nombreEquipo(local);
+    localImgs[0].title  = nombreEquipo(local);
+    localImgs[0].style.display = 'block';
+    if (localFall) localFall.style.display = 'none';
+  }
+
+  if (visitaImgs[0]) {
+    delete visitaImgs[0].dataset.fallback;
+    visitaImgs[0].src   = logoEquipo(visita);
+    visitaImgs[0].alt   = nombreEquipo(visita);
+    visitaImgs[0].title = nombreEquipo(visita);
+    visitaImgs[0].style.display = 'block';
+    if (visitaFall) visitaFall.style.display = 'none';
+  }
+
+  if (localNom)  localNom.textContent  = shortEquipo(local);
+  if (visitaNom) visitaNom.textContent = shortEquipo(visita);
+
+  // Restaurar scores
+  const newScores = partido.querySelectorAll('.score');
+  if (newScores[0]) newScores[0].textContent = scoreLocal;
+  if (newScores[1]) newScores[1].textContent = scoreVisita;
+
+  // Actualizar selector de partidos con nuevos nombres
+  llenarSelectorPartidos();
+  document.getElementById('adminPartidoSel').value = idx;
+
+  // Guardar en Firebase (documento aislado por QUINIELA_ID)
+  guardarDatosAdmin(obtenerEstadoActual());
+}
+
+window.aplicarCampoPartido = aplicarCampoPartido;
+
+/* ── Guardar título ── */
+function guardarTitulo() {
+  const val = document.getElementById('adminTitulo').value.trim();
+  if (!val) {
+    toast('⚠️ Escribe un título primero');
+    return;
+  }
+  document.getElementById('tituloJornada').textContent = val.toUpperCase();
+  guardarDatosAdmin(obtenerEstadoActual());
+  toast('✅ Título actualizado');
+}
+
+window.guardarTitulo = guardarTitulo;
+
+/* ── Resetear todo ── */
+function resetearTodo() {
+  if (!confirm('¿Seguro que deseas resetear todos los partidos al estado original?\n\nEsta acción no se puede deshacer.')) return;
+  localStorage.removeItem(LS_KEY);
+  toast('🔄 Reseteando…');
+  setTimeout(() => location.reload(), 600);
+}
+
+window.resetearTodo = resetearTodo;
+
+/* ══════════════════════════════════════════════════════════
+   9. EXPORTACIÓN PNG
+   ──────────────────────────────────────────────────────────
+   Estrategia robusta para html2canvas:
+   1. Desactivar contenteditable y blur() de todos los scores
+      → evita que html2canvas renderice el caret o el outline
+        de focus, que producen artefactos en el PNG.
+   2. Aplicar clase .modo-imagen al body
+      → CSS limpia box-shadow, backgrounds de focus, etc.
+   3. Cerrar el panel admin si estuviera abierto.
+   4. Esperar a que TODAS las imágenes del DOM carguen
+      antes de iniciar la captura (Promise.all + onload).
+   5. Pausa extra de 200ms para que el navegador actualice
+      el layout después de los pasos anteriores.
+   6. Configuración html2canvas:
+      - scale: 3         → PNG de alta resolución (3×)
+      - useCORS: true    → permite imágenes cross-origin
+      - allowTaint: true → no bloquea por CORS fallidos
+      - foreignObjectRendering: false → más estable en todos
+                                        los navegadores
+      - imageTimeout: 15000  → espera hasta 15s por imagen
+      - backgroundColor: '#ffffff'
+   7. Restaurar todo en el bloque finally.
+══════════════════════════════════════════════════════════ */
+
+/* ====================== EXPORTAR PNG (DOM-TO-IMAGE) ====================== */
+/* ====================== GUARDAR PNG + MENSAJE PARA GALERÍA ====================== */
+document.getElementById('btnGuardar').addEventListener('click', exportarPNG);
+
+async function exportarPNG() {
+  const quiniela = document.getElementById('quiniela');
+  const btn = document.getElementById('btnGuardar');
+  const textoOriginal = btn.innerHTML;
+
+  btn.innerHTML = 'Guardando...';
+  btn.disabled = true;
+
+  document.body.classList.add('modo-imagen');
+
+  const scores = quiniela.querySelectorAll('.score');
+  const valores = Array.from(scores).map(s => s.textContent);
+
+  try {
+    scores.forEach(s => {
+      s.contentEditable = false;
+      s.style.pointerEvents = 'none';
+    });
+
+    if (panelAbierto) togglePanelAdmin();
+
+    await new Promise(r => setTimeout(r, 150));
+
+    const canvas = await html2canvas(quiniela, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
+
+    const link = document.createElement('a');
+    const nombre = document.getElementById('nombreJugador').textContent.trim() || 'jugador';
+    link.download = `quiniela-${nombre.toLowerCase()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    // Mensaje amigable para móviles
+    toast('✅ Imagen descargada correctamente\nMantén presionada la imagen → Guardar en Fotos');
+
+  } catch (err) {
+    console.error(err);
+    toast('❌ Error al guardar imagen');
+  } finally {
+    scores.forEach((s, i) => {
+      s.contentEditable = true;
+      s.textContent = valores[i];
+      s.style.pointerEvents = '';
+    });
+    document.body.classList.remove('modo-imagen');
+    btn.innerHTML = textoOriginal;
+    btn.disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   10. COMPARTIR - Versión más amigable para usuarios
+══════════════════════════════════════════════════════════ */
+
+const btnCompartir = document.getElementById('btnCompartir');
+
+if (navigator.share) {
+  btnCompartir.style.display = 'flex';
+
+  btnCompartir.addEventListener('click', async () => {
+    const quiniela = document.getElementById('quiniela');
+    const nombre = document.getElementById('nombreJugador').textContent.trim() || 'Jugador';
+
+    document.body.classList.add('modo-imagen');
+    if (panelAbierto) togglePanelAdmin();
+
+    try {
+      await new Promise(r => setTimeout(r, 150));
+
+      const canvas = await html2canvas(quiniela, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const file = new File([blob], `quiniela-${nombre.toLowerCase()}.png`, { type: 'image/png' });
+
+      // Intento principal: Compartir directamente
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Mi Quiniela Liga MX',
+          text: `🏆 Quiniela de ${nombre} - Apertura 2026 (v5)`,
+          files: [file]
+        });
+      } else {
+        // Fallback fuerte: Descargar + mensaje claro
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast('✅ Imagen descargada. Ahora compártela desde Galería/Fotos');
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast('❌ Error al compartir. Se descargó la imagen.');
+    } finally {
+      document.body.classList.remove('modo-imagen');
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   11. INICIALIZACIÓN
+══════════════════════════════════════════════════════════ */
+
+function setFechaGeneracion() {
+  const el = document.getElementById('q-fecha-gen');
+  if (!el) return;
+  el.textContent = new Date().toLocaleDateString('es-MX', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
+
+async function init() {
+  // Cargar configuración desde Firebase (documento aislado: config-v5)
+  const guardado = await cargarDatosAdmin();
+
+  let partidos = PARTIDOS_DEFAULT;
+  let titulo   = 'JORNADA 1';
+
+  if (guardado) {
+    if (Array.isArray(guardado.partidos) && guardado.partidos.length === 9) {
+      partidos = guardado.partidos;
+    }
+    if (guardado.titulo) {
+      titulo = guardado.titulo;
+    }
+  }
+
+  document.getElementById('tituloJornada').textContent = titulo;
+  renderPartidos(partidos);
+  setFechaGeneracion();
+
+  modal.style.display = 'flex';
+  setTimeout(() => inputNombre.focus(), 150);
+}
+
+// ¡Arrancar!
+init();
+  </script>
+</body>
+</html>
