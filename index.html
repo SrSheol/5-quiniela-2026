@@ -1325,7 +1325,7 @@ main {
         </svg>
         <span>Guardar PNG</span>
       </button>
-      <button id="btnCompartir" class="btn-accion btn-compartir" style="display:none;">
+      <button id="btnCompartir" class="btn-accion btn-compartir">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
@@ -1361,8 +1361,8 @@ main {
  *  6. Eventos de scores (contenteditable)
  *  7. Modal de login + Modo Admin
  *  8. Panel Admin (toggle sin conflictos CSS)
- *  9. Exportación PNG (estrategia robusta para html2canvas)
- * 10. Compartir (Web Share API)
+ *  9. Exportación PNG (estrategia robusta para móvil)
+ * 10. Compartir (Web Share API con fallback a descarga)
  * 11. Inicialización
  * ════════════════════════════════════════════════════════════
  */
@@ -2053,32 +2053,134 @@ function resetearTodo() {
 window.resetearTodo = resetearTodo;
 
 /* ══════════════════════════════════════════════════════════
-   9. EXPORTACIÓN PNG
+   9. EXPORTACIÓN PNG — versión robusta para móvil
    ──────────────────────────────────────────────────────────
-   Estrategia robusta para html2canvas:
-   1. Desactivar contenteditable y blur() de todos los scores
-      → evita que html2canvas renderice el caret o el outline
-        de focus, que producen artefactos en el PNG.
-   2. Aplicar clase .modo-imagen al body
-      → CSS limpia box-shadow, backgrounds de focus, etc.
-   3. Cerrar el panel admin si estuviera abierto.
-   4. Forzar el ancho de #quiniela a 1080px (fijo) antes de
-      capturar, para que en celular la imagen salga ancha y
-      no angosta con franjas negras al verla en pantalla
-      completa. html2canvas usa windowWidth: 1080 a juego.
-   5. Esperar a que el navegador actualice el layout después
-      de los cambios anteriores (150ms).
-   6. Configuración html2canvas:
-      - scale: 3 (Guardar) / 2 (Compartir)
-      - useCORS: true    → permite imágenes cross-origin
-      - backgroundColor: '#ffffff'
-      - windowWidth: 1080 → fuerza el viewport de captura
-   7. Restaurar todo (ancho, modo-imagen, contenteditable)
-      en el bloque finally.
+   Problema original: en celular, #quiniela vive dentro de
+   main { max-width: 880px } y en pantallas angostas el layout
+   real es ~360px, así que html2canvas capturaba una imagen
+   angosta. Además <a download> no funciona de forma confiable
+   en Safari iOS / algunos navegadores Android.
+
+   Solución:
+   1. prepararCaptura() fuerza main y #quiniela a 1080px de
+      ancho real (no solo windowWidth de html2canvas), cierra
+      el panel admin y "congela" los scores.
+   2. capturarCanvas() usa html2canvas con width/windowWidth
+      fijos en 1080 para que la captura sea siempre ancha,
+      tanto en PC como en celular.
+   3. compartirODescargar() intenta primero la Web Share API
+      (abre la hoja nativa de WhatsApp / Guardar en Fotos) y
+      solo si no está disponible o falla, cae a la descarga
+      clásica con <a download>.
+   4. restaurarCaptura() regresa todo a su estado normal.
 ══════════════════════════════════════════════════════════ */
 
-/* ====================== EXPORTAR PNG (DOM-TO-IMAGE) ====================== */
-/* ====================== GUARDAR PNG + MENSAJE PARA GALERÍA ====================== */
+/** Prepara el DOM para la captura y devuelve el estado previo para restaurar */
+function prepararCaptura(quiniela) {
+  document.body.classList.add('modo-imagen');
+
+  if (panelAbierto) togglePanelAdmin();
+
+  const scores = quiniela.querySelectorAll('.score');
+  const valoresScores = Array.from(scores).map(s => s.textContent);
+  scores.forEach(s => {
+    s.contentEditable = false;
+    s.blur();
+    s.style.pointerEvents = 'none';
+  });
+
+  const main = document.querySelector('main');
+
+  const prev = {
+    mainWidth:    main.style.width,
+    mainMaxWidth: main.style.maxWidth,
+    qWidth:       quiniela.style.width,
+    qMaxWidth:    quiniela.style.maxWidth,
+    qMinWidth:    quiniela.style.minWidth,
+    valoresScores,
+  };
+
+  main.style.width      = '1080px';
+  main.style.maxWidth   = '1080px';
+  quiniela.style.width    = '1080px';
+  quiniela.style.maxWidth = '1080px';
+  quiniela.style.minWidth = '1080px';
+
+  return prev;
+}
+
+/** Restaura el DOM al estado que tenía antes de prepararCaptura() */
+function restaurarCaptura(quiniela, prev) {
+  const main = document.querySelector('main');
+
+  main.style.width    = prev.mainWidth;
+  main.style.maxWidth = prev.mainMaxWidth;
+
+  quiniela.style.width    = prev.qWidth;
+  quiniela.style.maxWidth = prev.qMaxWidth;
+  quiniela.style.minWidth = prev.qMinWidth;
+
+  const scores = quiniela.querySelectorAll('.score');
+  scores.forEach((s, i) => {
+    s.contentEditable = true;
+    s.textContent = prev.valoresScores[i] ?? s.textContent;
+    s.style.pointerEvents = '';
+  });
+
+  document.body.classList.remove('modo-imagen');
+}
+
+/** Pequeña espera para que el navegador aplique el nuevo layout antes de capturar */
+function esperarLayout(ms = 300) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+/** Genera el canvas con html2canvas usando un ancho fijo de 1080px */
+function capturarCanvas(quiniela, scale) {
+  return html2canvas(quiniela, {
+    scale,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    windowWidth: 1080,
+    width: 1080,
+    foreignObjectRendering: false,
+    imageTimeout: 15000,
+  });
+}
+
+/**
+ * Intenta abrir la hoja nativa de compartir (WhatsApp, Guardar en Fotos, etc.)
+ * usando la Web Share API con archivos. Si no está disponible, el usuario
+ * cancela, o falla por cualquier motivo, cae a la descarga clásica.
+ * Devuelve 'share', 'descarga' o 'cancelado'.
+ */
+async function compartirODescargar(blob, nombreArchivo, titulo, texto) {
+  const file = new File([blob], nombreArchivo, { type: 'image/png' });
+
+  try {
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: titulo, text: texto, files: [file] });
+      return 'share';
+    }
+  } catch (err) {
+    if (err && err.name === 'AbortError') return 'cancelado';
+    console.error('No se pudo compartir, se intentará descargar:', err);
+  }
+
+  // Fallback: descarga clásica
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return 'descarga';
+}
+
+/* ── Botón Guardar ── */
 document.getElementById('btnGuardar').addEventListener('click', exportarPNG);
 
 async function exportarPNG() {
@@ -2089,121 +2191,97 @@ async function exportarPNG() {
   btn.innerHTML = 'Guardando...';
   btn.disabled = true;
 
-  document.body.classList.add('modo-imagen');
+  const nombre = document.getElementById('nombreJugador').textContent.trim() || 'jugador';
+  const nombreArchivo = `quiniela-${nombre.toLowerCase()}.png`;
+  const esMovil = window.innerWidth < 700;
+  const scale = esMovil ? 2 : 3;
 
-  const scores = quiniela.querySelectorAll('.score');
-  const valores = Array.from(scores).map(s => s.textContent);
+  const prev = prepararCaptura(quiniela);
 
   try {
-    scores.forEach(s => {
-      s.contentEditable = false;
-      s.style.pointerEvents = 'none';
-    });
+    await esperarLayout(300);
 
-    if (panelAbierto) togglePanelAdmin();
+    const canvas = await capturarCanvas(quiniela, scale);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
 
-    // Forzar ancho fijo para que la captura salga ancha también en celular
-    quiniela.style.width = '1080px';
-    quiniela.style.maxWidth = '1080px';
+    if (!blob) throw new Error('No se pudo generar la imagen');
 
-    await new Promise(r => setTimeout(r, 150));
+    const resultado = await compartirODescargar(
+      blob,
+      nombreArchivo,
+      'Mi Quiniela Liga MX',
+      `🏆 Quiniela de ${nombre} - Apertura 2026`
+    );
 
-    const canvas = await html2canvas(quiniela, {
-      scale: 3,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      windowWidth: 1080
-    });
-
-    const link = document.createElement('a');
-    const nombre = document.getElementById('nombreJugador').textContent.trim() || 'jugador';
-    link.download = `quiniela-${nombre.toLowerCase()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-
-    // Mensaje amigable para móviles
-    toast('✅ Imagen descargada correctamente\nMantén presionada la imagen → Guardar en Fotos');
+    if (resultado === 'share') {
+      toast('✅ Imagen lista — elige "Guardar en Fotos" o compártela');
+    } else if (resultado === 'descarga') {
+      toast('✅ Imagen descargada\nMantén presionada la imagen → Guardar en Fotos');
+    }
 
   } catch (err) {
     console.error(err);
     toast('❌ Error al guardar imagen');
   } finally {
-    scores.forEach((s, i) => {
-      s.contentEditable = true;
-      s.textContent = valores[i];
-      s.style.pointerEvents = '';
-    });
-    quiniela.style.width = '';
-    quiniela.style.maxWidth = '';
-    document.body.classList.remove('modo-imagen');
+    restaurarCaptura(quiniela, prev);
     btn.innerHTML = textoOriginal;
     btn.disabled = false;
   }
 }
 
 /* ══════════════════════════════════════════════════════════
-   10. COMPARTIR - Versión más amigable para usuarios
+   10. COMPARTIR
+   El botón siempre se muestra (en PC también descarga si no
+   hay Web Share API disponible).
 ══════════════════════════════════════════════════════════ */
 
 const btnCompartir = document.getElementById('btnCompartir');
+btnCompartir.style.display = 'flex';
 
-if (navigator.share) {
-  btnCompartir.style.display = 'flex';
+btnCompartir.addEventListener('click', async () => {
+  const quiniela = document.getElementById('quiniela');
+  const btn = btnCompartir;
+  const textoOriginal = btn.innerHTML;
 
-  btnCompartir.addEventListener('click', async () => {
-    const quiniela = document.getElementById('quiniela');
-    const nombre = document.getElementById('nombreJugador').textContent.trim() || 'Jugador';
+  btn.innerHTML = 'Preparando...';
+  btn.disabled = true;
 
-    document.body.classList.add('modo-imagen');
-    if (panelAbierto) togglePanelAdmin();
+  const nombre = document.getElementById('nombreJugador').textContent.trim() || 'Jugador';
+  const nombreArchivo = `quiniela-${nombre.toLowerCase()}.png`;
+  const scale = 2; // Siempre 2: WhatsApp puede rechazar/fallar con PNG enormes en iPhone
 
-    // Forzar ancho fijo para que la captura salga ancha también en celular
-    quiniela.style.width = '1080px';
-    quiniela.style.maxWidth = '1080px';
+  const prev = prepararCaptura(quiniela);
 
-    try {
-      await new Promise(r => setTimeout(r, 150));
+  try {
+    await esperarLayout(300);
 
-      const canvas = await html2canvas(quiniela, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: 1080
-      });
-      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-      const file = new File([blob], `quiniela-${nombre.toLowerCase()}.png`, { type: 'image/png' });
+    const canvas = await capturarCanvas(quiniela, scale);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
 
-      // Intento principal: Compartir directamente
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: 'Mi Quiniela Liga MX',
-          text: `🏆 Quiniela de ${nombre} - Apertura 2026 (v5)`,
-          files: [file]
-        });
-      } else {
-        // Fallback fuerte: Descargar + mensaje claro
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    if (!blob) throw new Error('No se pudo generar la imagen');
 
-        toast('✅ Imagen descargada. Ahora compártela desde Galería/Fotos');
-      }
+    const resultado = await compartirODescargar(
+      blob,
+      nombreArchivo,
+      'Mi Quiniela Liga MX',
+      `🏆 Quiniela de ${nombre} - Apertura 2026`
+    );
 
-    } catch (err) {
-      console.error(err);
-      toast('❌ Error al compartir. Se descargó la imagen.');
-    } finally {
-      quiniela.style.width = '';
-      quiniela.style.maxWidth = '';
-      document.body.classList.remove('modo-imagen');
+    if (resultado === 'descarga') {
+      toast('✅ Imagen descargada. Ahora compártela desde Galería/Fotos');
+    } else if (resultado === 'share') {
+      toast('✅ ¡Listo para compartir!');
     }
-  });
-}
+
+  } catch (err) {
+    console.error(err);
+    toast('❌ Error al compartir. Intenta de nuevo.');
+  } finally {
+    restaurarCaptura(quiniela, prev);
+    btn.innerHTML = textoOriginal;
+    btn.disabled = false;
+  }
+});
 
 /* ══════════════════════════════════════════════════════════
    11. INICIALIZACIÓN
