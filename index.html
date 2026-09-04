@@ -2062,19 +2062,19 @@ window.resetearTodo = resetearTodo;
    2. Aplicar clase .modo-imagen al body
       → CSS limpia box-shadow, backgrounds de focus, etc.
    3. Cerrar el panel admin si estuviera abierto.
-   4. Esperar a que TODAS las imágenes del DOM carguen
-      antes de iniciar la captura (Promise.all + onload).
-   5. Pausa extra de 200ms para que el navegador actualice
-      el layout después de los pasos anteriores.
+   4. Forzar el ancho de #quiniela a 1080px (fijo) antes de
+      capturar, para que en celular la imagen salga ancha y
+      no angosta con franjas negras al verla en pantalla
+      completa. html2canvas usa windowWidth: 1080 a juego.
+   5. Esperar a que el navegador actualice el layout después
+      de los cambios anteriores (150ms).
    6. Configuración html2canvas:
-      - scale: 3         → PNG de alta resolución (3×)
+      - scale: 3 (Guardar) / 2 (Compartir)
       - useCORS: true    → permite imágenes cross-origin
-      - allowTaint: true → no bloquea por CORS fallidos
-      - foreignObjectRendering: false → más estable en todos
-                                        los navegadores
-      - imageTimeout: 15000  → espera hasta 15s por imagen
       - backgroundColor: '#ffffff'
-   7. Restaurar todo en el bloque finally.
+      - windowWidth: 1080 → fuerza el viewport de captura
+   7. Restaurar todo (ancho, modo-imagen, contenteditable)
+      en el bloque finally.
 ══════════════════════════════════════════════════════════ */
 
 /* ====================== EXPORTAR PNG (DOM-TO-IMAGE) ====================== */
@@ -2102,12 +2102,17 @@ async function exportarPNG() {
 
     if (panelAbierto) togglePanelAdmin();
 
+    // Forzar ancho fijo para que la captura salga ancha también en celular
+    quiniela.style.width = '1080px';
+    quiniela.style.maxWidth = '1080px';
+
     await new Promise(r => setTimeout(r, 150));
 
     const canvas = await html2canvas(quiniela, {
       scale: 3,
       useCORS: true,
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
+      windowWidth: 1080
     });
 
     const link = document.createElement('a');
@@ -2128,6 +2133,8 @@ async function exportarPNG() {
       s.textContent = valores[i];
       s.style.pointerEvents = '';
     });
+    quiniela.style.width = '';
+    quiniela.style.maxWidth = '';
     document.body.classList.remove('modo-imagen');
     btn.innerHTML = textoOriginal;
     btn.disabled = false;
@@ -2150,10 +2157,19 @@ if (navigator.share) {
     document.body.classList.add('modo-imagen');
     if (panelAbierto) togglePanelAdmin();
 
+    // Forzar ancho fijo para que la captura salga ancha también en celular
+    quiniela.style.width = '1080px';
+    quiniela.style.maxWidth = '1080px';
+
     try {
       await new Promise(r => setTimeout(r, 150));
 
-      const canvas = await html2canvas(quiniela, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const canvas = await html2canvas(quiniela, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 1080
+      });
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
       const file = new File([blob], `quiniela-${nombre.toLowerCase()}.png`, { type: 'image/png' });
 
@@ -2182,6 +2198,8 @@ if (navigator.share) {
       console.error(err);
       toast('❌ Error al compartir. Se descargó la imagen.');
     } finally {
+      quiniela.style.width = '';
+      quiniela.style.maxWidth = '';
       document.body.classList.remove('modo-imagen');
     }
   });
