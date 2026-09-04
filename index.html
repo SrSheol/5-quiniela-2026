@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700;1,800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
 /* ════════════════════════════════════════════════════════════
-   QUINIELA LIGA MX · styles.css  v3.0
+   QUINIELA LIGA MX · styles.css  v3.1
    Diseño: Elegante, moderno, fiel a Liga MX
    Paleta: Cian #60D8DF · Amarillo #FFF52D · Blanco #fff
    Tipografía: Barlow Condensed (display) + Barlow (body)
@@ -81,7 +81,7 @@ body::before {
 main {
   position: relative;
   z-index: 1;
-  max-width: 500px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
@@ -284,9 +284,10 @@ main {
   overflow: hidden;
   box-shadow: var(--sombra-card);
   border: 1.5px solid var(--gris-borde);
-  /* Ancho fijo para PNG consistente */
+  /* Ancho fluido para PNG consistente, mucho más ancha que antes */
   width: 100%;
-  max-width: 500px;
+  max-width: 840px;
+  margin: 0 auto;
 }
 
 /* ── HEADER ── */
@@ -412,7 +413,7 @@ main {
   color: var(--dorado);
   text-transform: uppercase;
   word-break: break-word;
-  max-width: 110px;
+  max-width: 160px;
   text-align: right;
   line-height: 1.1;
   text-shadow: var(--text-stroke);
@@ -451,7 +452,7 @@ main {
 
 .partido {
   border-bottom: 1px solid var(--gris-borde);
-  padding: 10px 14px 14px;
+  padding: 14px 18px 18px;
   position: relative;
   background: var(--blanco);
   /* Animación de entrada */
@@ -482,10 +483,10 @@ main {
 /* Número de partido */
 .partido-num {
   position: absolute;
-  left: 14px;
-  top: 11px;
+  left: 16px;
+  top: 13px;
   font-family: var(--font-cond);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--dorado);
   letter-spacing: .3px;
@@ -493,13 +494,13 @@ main {
   text-shadow: var(--text-stroke);
 }
 
-/* Fila info (fecha · hora · canal) — ahora debajo del marcador */
+/* Fila info (fecha · hora · canales) — debajo del marcador */
 .p-info-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  margin-top: 10px;
+  margin-top: 12px;
   padding-left: 0;
   flex-wrap: wrap;
   min-height: 18px;
@@ -507,7 +508,7 @@ main {
 
 .p-fecha {
   font-family: var(--font-cond);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--gris-texto);
   letter-spacing: .4px;
@@ -517,7 +518,7 @@ main {
 
 .p-hora {
   font-family: var(--font-cond);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--verde-mid);
   white-space: nowrap;
@@ -527,6 +528,15 @@ main {
 .p-sep {
   color: var(--gris-borde);
   font-size: 12px;
+}
+
+/* Contenedor de hasta 4 canales */
+.p-canales-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 /* Canal */
@@ -563,7 +573,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 6px;
 }
 
 /* Equipo */
@@ -571,31 +581,31 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  width: 80px;
+  gap: 8px;
+  width: 150px;
   flex-shrink: 0;
 }
 
 .equipo img {
-  width: 58px;
-  height: 58px;
+  width: 82px;
+  height: 82px;
   object-fit: contain;
   display: block;
 }
 
 .equipo-nombre {
   font-family: var(--font-cond);
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--gris-dark);
   text-transform: uppercase;
-  letter-spacing: .5px;
+  letter-spacing: .3px;
   text-align: center;
-  line-height: 1.2;
-  max-width: 76px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  max-width: 142px;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
 }
 
 /* Score central */
@@ -617,15 +627,15 @@ main {
    CRÍTICO: contenteditable se desactiva antes de exportar.
    Sin outline complicado que confunda a html2canvas. */
 .score {
-  width: 48px;
-  height: 48px;
+  width: 66px;
+  height: 66px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid rgba(96,216,223,.25);
   border-radius: var(--radius-sm);
   font-family: var(--font-cond);
-  font-size: 28px;
+  font-size: 38px;
   font-weight: 800;
   color: var(--verde);
   cursor: text;
@@ -654,7 +664,7 @@ main {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 0 8px;
+  padding: 0 10px;
 }
 
 .score-divider-dash {
@@ -836,7 +846,7 @@ main {
   position: fixed;
   right: 20px;
   bottom: 92px;
-  width: 308px;
+  width: 320px;
   max-height: 75vh;
   display: flex;
   flex-direction: column;
@@ -1057,18 +1067,26 @@ main {
 /* ════════════════════════════════════════════════════════════
    RESPONSIVE — MÓVIL
 ════════════════════════════════════════════════════════════ */
-@media (max-width: 520px) {
-  body { padding: 12px 8px 90px; }
+@media (max-width: 900px) {
+  main { max-width: 100%; }
+  .quiniela { max-width: 100%; }
+}
+
+@media (max-width: 640px) {
+  body { padding: 12px 6px 90px; }
 
   .q-header { gap: 8px; padding: 12px 12px; }
   #tituloJornada { font-size: 24px; }
   .q-logo-wrap { width: 40px; height: 40px; }
 
-  .equipo { width: 66px; }
-  .equipo img { width: 48px; height: 48px; }
-  .equipo-nombre { font-size: 9px; max-width: 62px; }
+  .fila-partido { gap: 2px; }
 
-  .score { width: 42px; height: 42px; font-size: 24px; }
+  .equipo { width: 108px; gap: 6px; }
+  .equipo img { width: 68px; height: 68px; }
+  .equipo-nombre { font-size: 12.5px; max-width: 100px; }
+
+  .score { width: 54px; height: 54px; font-size: 28px; }
+  .score-divider { padding: 0 4px; }
 
   .acciones { flex-direction: column; }
 
@@ -1080,13 +1098,15 @@ main {
     max-height: 70vh;
   }
 
-  #nombreJugador { font-size: 14px; max-width: 90px; }
+  #nombreJugador { font-size: 14px; max-width: 100px; }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 400px) {
   .q-col-center { grid-column: unset; }
-  .equipo { width: 58px; }
-  .score { width: 38px; height: 38px; font-size: 21px; }
+  .equipo { width: 92px; }
+  .equipo img { width: 58px; height: 58px; }
+  .equipo-nombre { font-size: 11px; max-width: 86px; }
+  .score { width: 46px; height: 46px; font-size: 23px; }
 }
   </style>
 </head>
@@ -1211,8 +1231,21 @@ main {
         <label class="ap-label">Equipo Visitante</label>
         <select id="apVisita" class="ap-select" onchange="aplicarCampoPartido()"></select>
 
-        <label class="ap-label">Canal</label>
-        <select id="apCanal" class="ap-select" onchange="aplicarCampoPartido()"></select>
+        <label class="ap-label">Canales (hasta 4)</label>
+        <div class="ap-form-grid">
+          <div class="ap-form-col">
+            <select id="apCanal1" class="ap-select" onchange="aplicarCampoPartido()"></select>
+          </div>
+          <div class="ap-form-col">
+            <select id="apCanal2" class="ap-select" onchange="aplicarCampoPartido()"></select>
+          </div>
+          <div class="ap-form-col">
+            <select id="apCanal3" class="ap-select" onchange="aplicarCampoPartido()"></select>
+          </div>
+          <div class="ap-form-col">
+            <select id="apCanal4" class="ap-select" onchange="aplicarCampoPartido()"></select>
+          </div>
+        </div>
       </div>
 
       <div class="ap-divider"></div>
@@ -1317,7 +1350,7 @@ main {
   <script>
 /**
  * ════════════════════════════════════════════════════════════
- *  QUINIELA LIGA MX · script.js  v3.0 (instancia v5)
+ *  QUINIELA LIGA MX · script.js  v3.1 (instancia v5)
  *
  *  Arquitectura:
  *  1. Datos (equipos, canales, partidos por defecto)
@@ -1391,19 +1424,25 @@ const CANALES = [
   { id: 'canal5',  nombre: 'Canal 5'          },
   { id: 'vix',     nombre: 'ViX'              },
   { id: 'amazon',  nombre: 'Amazon Prime'     },
+  { id: 'foxone',  nombre: 'FOX One'          },
+  { id: 'canal15',  nombre: 'Canal 15'          },
+  { id: 'fox+',  nombre: 'Fox +'          },
+  { id: 'disney',  nombre: 'Disney+'          },
+  { id: 'layvtime',  nombre: 'layv Time+'          },
 ];
 
-/** 9 partidos por defecto (el admin puede sobreescribirlos) */
+/** 9 partidos por defecto (el admin puede sobreescribirlos). Cada partido
+ *  admite hasta 4 canales en el array "canales". */
 const PARTIDOS_DEFAULT = [
-  { local: 'america',           visita: 'chivas',            fecha: '', hora: '', canal: 'tudn'   },
-  { local: 'monterrey',         visita: 'tigres',            fecha: '', hora: '', canal: 'fox'    },
-  { local: 'cruz-azul',         visita: 'pumas',             fecha: '', hora: '', canal: 'espn'   },
-  { local: 'pachuca',           visita: 'leon',              fecha: '', hora: '', canal: 'tudn'   },
-  { local: 'santos',            visita: 'toluca',            fecha: '', hora: '', canal: 'azteca' },
-  { local: 'atlas',             visita: 'tijuana',           fecha: '', hora: '', canal: 'fox'    },
-  { local: 'puebla',            visita: 'queretaro',         fecha: '', hora: '', canal: 'claro'  },
-  { local: 'necaxa',            visita: 'fc-juarez',         fecha: '', hora: '', canal: 'tudn'   },
-  { local: 'chivas',            visita: 'atletico-san-luis', fecha: '', hora: '', canal: 'canal5' },
+  { local: 'america',           visita: 'chivas',            fecha: '', hora: '', canales: ['tudn']   },
+  { local: 'monterrey',         visita: 'tigres',            fecha: '', hora: '', canales: ['fox']    },
+  { local: 'cruz-azul',         visita: 'pumas',             fecha: '', hora: '', canales: ['espn']   },
+  { local: 'pachuca',           visita: 'leon',              fecha: '', hora: '', canales: ['tudn']   },
+  { local: 'santos',            visita: 'toluca',            fecha: '', hora: '', canales: ['azteca'] },
+  { local: 'atlas',             visita: 'tijuana',           fecha: '', hora: '', canales: ['fox']    },
+  { local: 'puebla',            visita: 'queretaro',         fecha: '', hora: '', canales: ['claro']  },
+  { local: 'necaxa',            visita: 'fc-juarez',         fecha: '', hora: '', canales: ['tudn']   },
+  { local: 'chivas',            visita: 'atletico-san-luis', fecha: '', hora: '', canales: ['canal5'] },
 ];
 
 /** Clave de localStorage, aislada por instancia (QUINIELA_ID) */
@@ -1449,6 +1488,37 @@ function formatFecha(iso) {
 /** "20:00" → "20:00 h" */
 const formatHora = t => t ? t + ' h' : '';
 
+/** Normaliza un partido para asegurar que siempre tenga un array
+ *  "canales" (máx. 4). Convierte el antiguo campo "canal" (string)
+ *  a array si es necesario, para no romper datos guardados previos. */
+function normalizarCanales(p) {
+  if (Array.isArray(p.canales) && p.canales.length) {
+    return p.canales.filter(Boolean).slice(0, 4);
+  }
+  if (p.canal) {
+    return [p.canal];
+  }
+  return ['tudn'];
+}
+
+/** Genera el HTML de hasta 4 bloques de canal (logo + fallback texto) */
+function canalesHTML(canalesArr) {
+  const arr = (canalesArr && canalesArr.length ? canalesArr : []).slice(0, 4);
+  return arr.map(cid => {
+    const nom = nombreCanal(cid);
+    return `<div class="p-canal-wrap">
+        <img
+          class="canal-logo"
+          src="${logoCanal(cid)}"
+          alt="${nom}"
+          title="${nom}"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+        >
+        <span class="canal-text" style="display:none;">${nom}</span>
+      </div>`;
+  }).join('');
+}
+
 /** Muestra un toast temporal */
 function toast(msg, duracion = 2800) {
   const el = document.getElementById('toast');
@@ -1485,13 +1555,17 @@ async function guardarDatosAdmin(data) {
 
 /** Captura el estado actual de los partidos del DOM */
 function obtenerEstadoActual() {
-  const partidos = Array.from(document.querySelectorAll('.partido')).map(p => ({
-    local:  p.dataset.local,
-    visita: p.dataset.visita,
-    canal:  p.dataset.canal,
-    fecha:  p.dataset.fecha,
-    hora:   p.dataset.hora,
-  }));
+  const partidos = Array.from(document.querySelectorAll('.partido')).map(p => {
+    let canales = ['tudn'];
+    try { canales = JSON.parse(p.dataset.canales || '["tudn"]'); } catch (e) { canales = ['tudn']; }
+    return {
+      local:   p.dataset.local,
+      visita:  p.dataset.visita,
+      canales: canales,
+      fecha:   p.dataset.fecha,
+      hora:    p.dataset.hora,
+    };
+  });
   return {
     titulo: document.getElementById('tituloJornada').textContent.trim(),
     partidos,
@@ -1511,16 +1585,16 @@ function renderPartidos(datos) {
     const nombreVisita = nombreEquipo(p.visita);
     const shortLocal   = shortEquipo(p.local);
     const shortVisita  = shortEquipo(p.visita);
-    const nomCanal     = nombreCanal(p.canal || 'tudn');
+    const canalesArr   = normalizarCanales(p);
 
     const div = document.createElement('div');
     div.className    = 'partido';
     div.dataset.idx  = i;
-    div.dataset.local  = p.local;
-    div.dataset.visita = p.visita;
-    div.dataset.canal  = p.canal  || 'tudn';
-    div.dataset.fecha  = p.fecha  || '';
-    div.dataset.hora   = p.hora   || '';
+    div.dataset.local   = p.local;
+    div.dataset.visita  = p.visita;
+    div.dataset.canales = JSON.stringify(canalesArr);
+    div.dataset.fecha   = p.fecha  || '';
+    div.dataset.hora    = p.hora   || '';
 
     div.innerHTML = `
       <span class="partido-num">${i + 1}</span>
@@ -1543,8 +1617,8 @@ function renderPartidos(datos) {
               }
             "
           >
-          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--verde);">${shortLocal}</span>
-          <span class="equipo-nombre">${shortLocal}</span>
+          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--verde);">${shortLocal}</span>
+          <span class="equipo-nombre">${nombreLocal}</span>
         </div>
 
         <div class="score-zone">
@@ -1594,32 +1668,20 @@ function renderPartidos(datos) {
               }
             "
           >
-          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--verde);">${shortVisita}</span>
-          <span class="equipo-nombre">${shortVisita}</span>
+          <span class="equipo-fallback" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--verde);">${shortVisita}</span>
+          <span class="equipo-nombre">${nombreVisita}</span>
         </div>
 
       </div>
 
-      <!-- Fila: fecha, hora, canal (debajo del marcador) -->
+      <!-- Fila: fecha, hora, canales (debajo del marcador) -->
       <div class="p-info-row">
         <span class="p-fecha">${formatFecha(p.fecha)}</span>
         ${p.hora
           ? `<span class="p-sep">·</span><span class="p-hora">${formatHora(p.hora)}</span>`
           : ''
         }
-        <div class="p-canal-wrap">
-          <img
-            class="canal-logo"
-            src="${logoCanal(p.canal || 'tudn')}"
-            alt="${nomCanal}"
-            title="${nomCanal}"
-            onerror="
-              this.style.display='none';
-              this.nextElementSibling.style.display='inline-block';
-            "
-          >
-          <span class="canal-text" style="display:none;">${nomCanal}</span>
-        </div>
+        <div class="p-canales-container">${canalesHTML(canalesArr)}</div>
       </div>
     `;
 
@@ -1814,15 +1876,18 @@ function llenarSelectorEquipos() {
   });
 }
 
+/** Rellena los 4 selects de canal del formulario admin */
 function llenarSelectorCanales() {
-  const sel = document.getElementById('apCanal');
-  if (!sel) return;
-  sel.innerHTML = '';
-  CANALES.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value       = c.id;
-    opt.textContent = c.nombre;
-    sel.appendChild(opt);
+  ['apCanal1', 'apCanal2', 'apCanal3', 'apCanal4'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Ninguno —</option>';
+    CANALES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value       = c.id;
+      opt.textContent = c.nombre;
+      sel.appendChild(opt);
+    });
   });
 }
 
@@ -1845,7 +1910,14 @@ function cargarPartidoEnPanel() {
   document.getElementById('apHora').value   = partido.dataset.hora   || '';
   document.getElementById('apLocal').value  = partido.dataset.local  || '';
   document.getElementById('apVisita').value = partido.dataset.visita || '';
-  document.getElementById('apCanal').value  = partido.dataset.canal  || 'tudn';
+
+  let canalesGuardados = [];
+  try { canalesGuardados = JSON.parse(partido.dataset.canales || '[]'); } catch (e) { canalesGuardados = []; }
+
+  document.getElementById('apCanal1').value = canalesGuardados[0] || '';
+  document.getElementById('apCanal2').value = canalesGuardados[1] || '';
+  document.getElementById('apCanal3').value = canalesGuardados[2] || '';
+  document.getElementById('apCanal4').value = canalesGuardados[3] || '';
 }
 
 window.cargarPartidoEnPanel = cargarPartidoEnPanel;
@@ -1862,7 +1934,11 @@ function aplicarCampoPartido() {
   const hora   = document.getElementById('apHora').value;
   const local  = document.getElementById('apLocal').value;
   const visita = document.getElementById('apVisita').value;
-  const canal  = document.getElementById('apCanal').value;
+
+  const canales = ['apCanal1', 'apCanal2', 'apCanal3', 'apCanal4']
+    .map(id => document.getElementById(id).value)
+    .filter(Boolean)
+    .slice(0, 4);
 
   // Preservar scores actuales
   const scores      = partido.querySelectorAll('.score');
@@ -1870,18 +1946,17 @@ function aplicarCampoPartido() {
   const scoreVisita = scores[1]?.textContent || '0';
 
   // Actualizar datos en dataset
-  partido.dataset.fecha  = fecha;
-  partido.dataset.hora   = hora;
-  partido.dataset.local  = local;
-  partido.dataset.visita = visita;
-  partido.dataset.canal  = canal;
+  partido.dataset.fecha    = fecha;
+  partido.dataset.hora     = hora;
+  partido.dataset.local    = local;
+  partido.dataset.visita   = visita;
+  partido.dataset.canales  = JSON.stringify(canales);
 
   /* ── Actualizar DOM de la fila info ── */
   const fechaEl = partido.querySelector('.p-fecha');
   const horaEl  = partido.querySelector('.p-hora');
   const sepEl   = partido.querySelector('.p-sep');
-  const canalImg = partido.querySelector('.canal-logo');
-  const canalTxt = partido.querySelector('.canal-text');
+  const canalesCont = partido.querySelector('.p-canales-container');
 
   if (fechaEl) fechaEl.textContent = formatFecha(fecha);
 
@@ -1905,12 +1980,8 @@ function aplicarCampoPartido() {
     if (sepEl) sepEl.style.display = 'none';
   }
 
-  if (canalImg) {
-    canalImg.src   = logoCanal(canal);
-    canalImg.alt   = nombreCanal(canal);
-    canalImg.title = nombreCanal(canal);
-    canalImg.style.display = 'block';
-    if (canalTxt) canalTxt.style.display = 'none';
+  if (canalesCont) {
+    canalesCont.innerHTML = canalesHTML(canales);
   }
 
   /* ── Actualizar logos y nombres de equipos ── */
@@ -1939,8 +2010,8 @@ function aplicarCampoPartido() {
     if (visitaFall) visitaFall.style.display = 'none';
   }
 
-  if (localNom)  localNom.textContent  = shortEquipo(local);
-  if (visitaNom) visitaNom.textContent = shortEquipo(visita);
+  if (localNom)  localNom.textContent  = nombreEquipo(local);
+  if (visitaNom) visitaNom.textContent = nombreEquipo(visita);
 
   // Restaurar scores
   const newScores = partido.querySelectorAll('.score');
@@ -2137,7 +2208,12 @@ async function init() {
 
   if (guardado) {
     if (Array.isArray(guardado.partidos) && guardado.partidos.length === 9) {
-      partidos = guardado.partidos;
+      // Migración: partidos antiguos guardados con "canal" (string)
+      // se convierten a "canales" (array) sin perder datos.
+      partidos = guardado.partidos.map(p => ({
+        ...p,
+        canales: normalizarCanales(p),
+      }));
     }
     if (guardado.titulo) {
       titulo = guardado.titulo;
