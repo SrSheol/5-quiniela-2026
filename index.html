@@ -2108,10 +2108,10 @@ const GEO = {
   footerH:   33,           // 82 + 5 + 954 + 33 = 1074
   padX:      16,
   centroX:   242,
-  logo:      56,
-  equipoCx:  138,          // distancia del centro al centro de cada escudo
-  scoreBox:  52,
-  scoreSep:  44,           // distancia del centro al centro de cada score
+  logo:      68,           // escudos un poco más grandes
+  equipoCx:  146,          // más afuera para no chocar con scores
+  scoreBox:  50,
+  scoreSep:  42,           // distancia del centro al centro de cada score
 };
 
 /** Carga una imagen del mismo origen; resuelve null si falla */
@@ -2502,9 +2502,9 @@ function dibujarPartidoExport(ctx, C, p, i, y, logoL, logoV, canalImgs, esUltimo
   const cxL   = GEO.centroX - GEO.equipoCx;
   const cxV   = GEO.centroX + GEO.equipoCx;
   const L     = GEO.logo;
-  const logoY = y + 9;
-  const nomY  = y + 74;
-  const midY  = y + 46;
+  const logoY = y + 5;
+  const nomY  = y + 78;
+  const midY  = y + 39;
 
   // Escudos
   [[logoL, cxL, p.local], [logoV, cxV, p.visita]].forEach(([img, cx, id]) => {
@@ -2528,9 +2528,9 @@ function dibujarPartidoExport(ctx, C, p, i, y, logoL, logoV, canalImgs, esUltimo
   ctx.textBaseline = 'middle';
   const nL = nombreEquipo(p.local).toUpperCase();
   const nV = nombreEquipo(p.visita).toUpperCase();
-  fuenteAjustada(ctx, nL, 14, 800, 140);
+  fuenteAjustada(ctx, nL, 16, 800, 155);
   ctx.fillText(nL, cxL, nomY);
-  fuenteAjustada(ctx, nV, 14, 800, 140);
+  fuenteAjustada(ctx, nV, 16, 800, 155);
   ctx.fillText(nV, cxV, nomY);
   ctx.restore();
 
@@ -2549,7 +2549,7 @@ function dibujarPartidoExport(ctx, C, p, i, y, logoL, logoV, canalImgs, esUltimo
   ctx.restore();
 
   // Fecha · hora · canales
-  dibujarInfoExport(ctx, C, p, canalImgs, y + 94);
+  dibujarInfoExport(ctx, C, p, canalImgs, y + 96);
 }
 
 /* ── Footer (.q-footer) ── */
