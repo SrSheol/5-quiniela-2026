@@ -1340,9 +1340,6 @@ main {
 
   </main>
 
-  <!-- html2canvas -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <!-- 🔥 Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -1361,8 +1358,8 @@ main {
  *  6. Eventos de scores (contenteditable)
  *  7. Modal de login + Modo Admin
  *  8. Panel Admin (toggle sin conflictos CSS)
- *  9. Exportación PNG (estrategia robusta para móvil)
- * 10. Compartir (Web Share API con fallback a descarga)
+ *  9. Exportación de imagen (canvas fijo 484×1074 ×2 = 968×2148)
+ * 10. Compartir (JPEG + Web Share API con fallback a descarga)
  * 11. Inicialización
  * ════════════════════════════════════════════════════════════
  */
@@ -2053,100 +2050,415 @@ function resetearTodo() {
 window.resetearTodo = resetearTodo;
 
 /* ══════════════════════════════════════════════════════════
-   9. EXPORTACIÓN PNG — versión robusta para móvil
+   9. EXPORTACIÓN DE IMAGEN — lienzo fijo 484×1074 (x2)
    ──────────────────────────────────────────────────────────
-   Problema original: en celular, #quiniela vive dentro de
-   main { max-width: 880px } y en pantallas angostas el layout
-   real es ~360px, así que html2canvas capturaba una imagen
-   angosta. Además <a download> no funciona de forma confiable
-   en Safari iOS / algunos navegadores Android.
-
-   Solución:
-   1. prepararCaptura() fuerza main y #quiniela a 1080px de
-      ancho real (no solo windowWidth de html2canvas), cierra
-      el panel admin y "congela" los scores.
-   2. capturarCanvas() usa html2canvas con width/windowWidth
-      fijos en 1080 para que la captura sea siempre ancha,
-      tanto en PC como en celular.
-   3. compartirODescargar() intenta primero la Web Share API
-      (abre la hoja nativa de WhatsApp / Guardar en Fotos) y
-      solo si no está disponible o falla, cae a la descarga
-      clásica con <a download>.
-   4. restaurarCaptura() regresa todo a su estado normal.
+   Ya no se captura el DOM con html2canvas. La imagen se
+   dibuja directamente en un <canvas> de tamaño fijo:
+     · Lógico: 484 × 1074  ·  Real: 968 × 2148 (EXPORT_SCALE)
+   Así el archivo SIEMPRE tiene la misma proporción, sin
+   importar el ancho de la pantalla, y WhatsApp no agrega
+   barras negras. El DOM de la app no se modifica.
+   Datos que se leen del DOM (solo lectura):
+     · #tituloJornada   → "J-N"
+     · #nombreJugador   → nombre en la franja "Marcador"
+     · .partido          → local, visita, fecha, hora
+     · .score            → marcadores capturados
 ══════════════════════════════════════════════════════════ */
 
-/** Prepara el DOM para la captura y devuelve el estado previo para restaurar */
-function prepararCaptura(quiniela) {
-  document.body.classList.add('modo-imagen');
+const EXPORT_W     = 484;
+const EXPORT_H     = 1074;
+const EXPORT_SCALE = 2;
 
-  if (panelAbierto) togglePanelAdmin();
+const EXP = {
+  blanco:    '#FFFFFF',
+  amarillo:  '#FFF52D',
+  azul:      '#1565C0',
+  cianTop:   '#5BDCF8',
+  cianBot:   '#0E86D4',
+  cianLinea: '#0A4F8C',
+  jornada:   '#149FE3',
+  texto:     '#111111',
+  gris:      '#5B5B5B',
+  vs:        '#3F4652',
+  marco:     '#E8E08A',
+  marcoLuz:  '#FFFCD8',
+  marcoLinea:'#CFC45C',
+  tileBorde: '#C9CDD2',
+  fuente:    '"Barlow Condensed", "Arial Narrow", "Roboto Condensed", Arial, sans-serif',
+};
 
-  const scores = quiniela.querySelectorAll('.score');
-  const valoresScores = Array.from(scores).map(s => s.textContent);
-  scores.forEach(s => {
-    s.contentEditable = false;
-    s.blur();
-    s.style.pointerEvents = 'none';
-  });
+/** Geometría (px lógicos, lienzo 484×1074) */
+const GEO = {
+  marcoInset: 5,
+  marcoRadio: 22,
+  headerY:    36,          // centro vertical fila "J-N · APERTURA 2026 · J-N"
+  franjaY:    58,          // franja amarilla "Marcador"
+  franjaH:    30,
+  bandaX:     24,          // borde izquierdo de franjas amarillas
+  bandaW:     436,         // 24 → 460
+  filasY:     92,          // inicio del primer partido
+  filaH:      107,         // 9 × 107 = 963 → termina en 1055
+  centroX:    242,
+  tile:       60,
+  tileSep:    84,          // distancia centro → centro del escudo
+  marcadorL:  64,          // centro columna "Marcador" izquierda
+  marcadorR:  420,         // centro columna "Marcador" derecha
+};
 
-  const main = document.querySelector('main');
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-  const prev = {
-    mainWidth:    main.style.width,
-    mainMaxWidth: main.style.maxWidth,
-    qWidth:       quiniela.style.width,
-    qMaxWidth:    quiniela.style.maxWidth,
-    qMinWidth:    quiniela.style.minWidth,
-    valoresScores,
-  };
-
-  main.style.width      = '1080px';
-  main.style.maxWidth   = '1080px';
-  quiniela.style.width    = '1080px';
-  quiniela.style.maxWidth = '1080px';
-  quiniela.style.minWidth = '1080px';
-
-  return prev;
+/** "2026-09-04" → "04-sep"  (vacío → "--") */
+function fechaCortaExport(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso + 'T12:00:00');
+  if (isNaN(d)) return '--';
+  return `${String(d.getDate()).padStart(2, '0')}-${MESES_CORTOS[d.getMonth()]}`;
 }
 
-/** Restaura el DOM al estado que tenía antes de prepararCaptura() */
-function restaurarCaptura(quiniela, prev) {
-  const main = document.querySelector('main');
-
-  main.style.width    = prev.mainWidth;
-  main.style.maxWidth = prev.mainMaxWidth;
-
-  quiniela.style.width    = prev.qWidth;
-  quiniela.style.maxWidth = prev.qMaxWidth;
-  quiniela.style.minWidth = prev.qMinWidth;
-
-  const scores = quiniela.querySelectorAll('.score');
-  scores.forEach((s, i) => {
-    s.contentEditable = true;
-    s.textContent = prev.valoresScores[i] ?? s.textContent;
-    s.style.pointerEvents = '';
-  });
-
-  document.body.classList.remove('modo-imagen');
+/** "JORNADA 7 C26" → "J-7" */
+function jornadaCortaExport(titulo) {
+  const m = (titulo || '').match(/\d+/);
+  if (m) return `J-${m[0]}`;
+  return (titulo || 'J').trim().slice(0, 5).toUpperCase();
 }
 
-/** Pequeña espera para que el navegador aplique el nuevo layout antes de capturar */
-function esperarLayout(ms = 300) {
-  return new Promise(r => setTimeout(r, ms));
+/** Carga una imagen del mismo origen; resuelve null si falla */
+const _cacheImg = new Map();
+function cargarImagen(src) {
+  if (_cacheImg.has(src)) return _cacheImg.get(src);
+  const p = new Promise(res => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload  = () => res(img);
+    img.onerror = () => res(null);
+    img.src = src;
+  });
+  _cacheImg.set(src, p);
+  return p;
 }
 
-/** Genera el canvas con html2canvas usando un ancho fijo de 1080px */
-function capturarCanvas(quiniela, scale) {
-  return html2canvas(quiniela, {
-    scale,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    windowWidth: 1080,
-    width: 1080,
-    foreignObjectRendering: false,
-    imageTimeout: 15000,
+async function cargarLogoExport(id) {
+  return (await cargarImagen(logoEquipo(id))) || (await cargarImagen('assets/equipos/default.png'));
+}
+
+/** Espera a que Barlow Condensed esté lista para el canvas */
+async function cargarFuentesExport() {
+  if (!document.fonts || !document.fonts.load) return;
+  try {
+    await Promise.all([
+      document.fonts.load(`700 16px "Barlow Condensed"`),
+      document.fonts.load(`800 16px "Barlow Condensed"`),
+      document.fonts.load(`900 16px "Barlow Condensed"`),
+      document.fonts.load(`italic 800 16px "Barlow Condensed"`),
+    ]);
+  } catch (e) { /* se usa la fuente de respaldo */ }
+}
+
+/** Lee del DOM todo lo necesario para la imagen (sin modificarlo) */
+function datosExport() {
+  if (document.activeElement && document.activeElement.classList.contains('score')) {
+    document.activeElement.blur();
+  }
+
+  const partidos = Array.from(document.querySelectorAll('#contenedor-partidos .partido')).map(p => {
+    const sL = p.querySelector('.score[data-tipo="local"]');
+    const sV = p.querySelector('.score[data-tipo="visita"]');
+    return {
+      local:       p.dataset.local,
+      visita:      p.dataset.visita,
+      fecha:       p.dataset.fecha || '',
+      hora:        p.dataset.hora  || '',
+      golesLocal:  ((sL && sL.textContent) || '').trim() || '0',
+      golesVisita: ((sV && sV.textContent) || '').trim() || '0',
+    };
   });
+
+  const titulo = document.getElementById('tituloJornada').textContent.trim();
+  let nombre   = document.getElementById('nombreJugador').textContent.trim();
+  if (nombre === '—') nombre = '';
+
+  return { jornada: jornadaCortaExport(titulo), nombre, partidos };
+}
+
+/** Trazo de rectángulo redondeado (compatible con Safari viejo) */
+function trazoRedondeado(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + w - rr, y);
+  ctx.arcTo(x + w, y, x + w, y + rr, rr);
+  ctx.lineTo(x + w, y + h - rr);
+  ctx.arcTo(x + w, y + h, x + w - rr, y + h, rr);
+  ctx.lineTo(x + rr, y + h);
+  ctx.arcTo(x, y + h, x, y + h - rr, rr);
+  ctx.lineTo(x, y + rr);
+  ctx.arcTo(x, y, x + rr, y, rr);
+  ctx.closePath();
+}
+
+/** Fija la fuente reduciendo el tamaño hasta que el texto quepa en maxW */
+function fuenteAjustada(ctx, txt, size, weight, maxW, estilo = 'normal') {
+  let s = size;
+  ctx.font = `${estilo} ${weight} ${s}px ${EXP.fuente}`;
+  while (maxW && ctx.measureText(txt).width > maxW && s > 8) {
+    s -= 0.5;
+    ctx.font = `${estilo} ${weight} ${s}px ${EXP.fuente}`;
+  }
+  return s;
+}
+
+/** Texto con espaciado entre letras, centrado en cx */
+function textoEspaciado(ctx, txt, cx, y, espacio, modo) {
+  const chars  = Array.from(txt);
+  const anchos = chars.map(c => ctx.measureText(c).width);
+  const total  = anchos.reduce((a, b) => a + b, 0) + espacio * (chars.length - 1);
+  let x = cx - total / 2;
+  ctx.textAlign = 'left';
+  chars.forEach((c, i) => {
+    if (modo === 'stroke') ctx.strokeText(c, x, y);
+    else ctx.fillText(c, x, y);
+    x += anchos[i] + espacio;
+  });
+}
+
+/**
+ * Reduce una imagen en pasos de ½ hasta quedar ≤ 2× del tamaño
+ * destino. Evita escudos pixeleados en Safari/iOS, que ignora
+ * imageSmoothingQuality en reducciones grandes.
+ */
+function imagenNitida(img, destinoPx) {
+  let src = img;
+  let w = img.naturalWidth  || img.width;
+  let h = img.naturalHeight || img.height;
+  while (w > destinoPx * 2 && h > destinoPx * 2) {
+    const nw = Math.round(w / 2);
+    const nh = Math.round(h / 2);
+    const c  = document.createElement('canvas');
+    c.width = nw; c.height = nh;
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, nw, nh);
+    src = c; w = nw; h = nh;
+  }
+  return src;
+}
+
+/** Escudo en tarjeta redondeada tipo ícono (como la referencia) */
+function dibujarEscudo(ctx, img, cx, top, size, fallbackTxt) {
+  const x = cx - size / 2;
+  const r = 9;
+
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,0.18)';
+  ctx.shadowBlur    = 4;
+  ctx.shadowOffsetY = 1.5;
+  trazoRedondeado(ctx, x, top, size, size, r);
+  ctx.fillStyle = '#F7F7F7';
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  trazoRedondeado(ctx, x, top, size, size, r);
+  ctx.clip();
+  if (img) {
+    const fuente = imagenNitida(img, size * EXPORT_SCALE);
+    const iw = fuente.naturalWidth || fuente.width;
+    const ih = fuente.naturalHeight || fuente.height;
+    const k  = Math.min(size / iw, size / ih);
+    const dw = iw * k, dh = ih * k;
+    ctx.drawImage(fuente, cx - dw / 2, top + (size - dh) / 2, dw, dh);
+  } else {
+    ctx.fillStyle = EXP.azul;
+    ctx.font = `900 20px ${EXP.fuente}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fallbackTxt, cx, top + size / 2);
+  }
+  ctx.restore();
+
+  ctx.save();
+  trazoRedondeado(ctx, x + 0.5, top + 0.5, size - 1, size - 1, r);
+  ctx.lineWidth   = 1;
+  ctx.strokeStyle = EXP.tileBorde;
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Dibuja la quiniela completa y devuelve el canvas 968×2148 */
+async function generarCanvasQuiniela() {
+  await cargarFuentesExport();
+  const d = datosExport();
+
+  const [ligaLogo, ...logos] = await Promise.all([
+    cargarImagen('assets/liga-mx-logo.png'),
+    ...d.partidos.flatMap(p => [cargarLogoExport(p.local), cargarLogoExport(p.visita)]),
+  ]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = EXPORT_W * EXPORT_SCALE;
+  canvas.height = EXPORT_H * EXPORT_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.textBaseline = 'middle';
+
+  /* ── Fondo blanco total (sin transparencias → sin negro en WhatsApp) ── */
+  ctx.fillStyle = EXP.blanco;
+  ctx.fillRect(0, 0, EXPORT_W, EXPORT_H);
+
+  /* ── Marco redondeado crema/dorado ── */
+  const mi = GEO.marcoInset;
+  ctx.save();
+  trazoRedondeado(ctx, mi, mi, EXPORT_W - mi * 2, EXPORT_H - mi * 2, GEO.marcoRadio);
+  ctx.lineWidth   = 6;
+  ctx.strokeStyle = EXP.marco;
+  ctx.stroke();
+  trazoRedondeado(ctx, mi + 1, mi + 1, EXPORT_W - (mi + 1) * 2, EXPORT_H - (mi + 1) * 2, GEO.marcoRadio - 1);
+  ctx.lineWidth   = 1.5;
+  ctx.strokeStyle = EXP.marcoLuz;
+  ctx.stroke();
+  trazoRedondeado(ctx, mi + 4, mi + 4, EXPORT_W - (mi + 4) * 2, EXPORT_H - (mi + 4) * 2, GEO.marcoRadio - 4);
+  ctx.lineWidth   = 1;
+  ctx.strokeStyle = EXP.marcoLinea;
+  ctx.stroke();
+  ctx.restore();
+
+  /* ── Encabezado: J-N · [logo] APERTURA 2026 [logo] · J-N ── */
+  const hy = GEO.headerY;
+  ctx.save();
+  ctx.fillStyle = EXP.jornada;
+  fuenteAjustada(ctx, d.jornada, 24, 900, 58, 'italic');
+  ctx.textAlign = 'center';
+  ctx.fillText(d.jornada, 52, hy + 1);
+  ctx.fillText(d.jornada, EXPORT_W - 52, hy + 1);
+  ctx.restore();
+
+  if (ligaLogo) {
+    const ls = 34;
+    const lk = imagenNitida(ligaLogo, ls * EXPORT_SCALE);
+    ctx.drawImage(lk, 106 - ls / 2, hy - ls / 2, ls, ls);
+    ctx.drawImage(lk, EXPORT_W - 106 - ls / 2, hy - ls / 2, ls, ls);
+  }
+
+  ctx.save();
+  ctx.font = `900 27px ${EXP.fuente}`;
+  const grad = ctx.createLinearGradient(0, hy - 13, 0, hy + 13);
+  grad.addColorStop(0, EXP.cianTop);
+  grad.addColorStop(1, EXP.cianBot);
+  ctx.lineJoin    = 'round';
+  ctx.lineWidth   = 2.4;
+  ctx.strokeStyle = EXP.cianLinea;
+  textoEspaciado(ctx, 'APERTURA 2026', GEO.centroX, hy + 1, 2.2, 'stroke');
+  ctx.fillStyle = grad;
+  textoEspaciado(ctx, 'APERTURA 2026', GEO.centroX, hy + 1, 2.2, 'fill');
+  ctx.restore();
+
+  /* ── Franja amarilla "Marcador" ── */
+  const fy = GEO.franjaY, fh = GEO.franjaH, bx = GEO.bandaX, bw = GEO.bandaW;
+  ctx.fillStyle = EXP.amarillo;
+  ctx.fillRect(bx, fy, bw, fh);
+
+  ctx.save();
+  ctx.fillStyle = EXP.azul;
+  ctx.font = `800 18px ${EXP.fuente}`;
+  ctx.textAlign = 'left';
+  ctx.fillText('Marcador', bx + 7, fy + fh / 2 + 1);
+  ctx.textAlign = 'right';
+  ctx.fillText('Marcador', bx + bw - 7, fy + fh / 2 + 1);
+  if (d.nombre) {
+    ctx.fillStyle = EXP.texto;
+    ctx.textAlign = 'center';
+    fuenteAjustada(ctx, d.nombre.toUpperCase(), 17, 800, 220);
+    ctx.fillText(d.nombre.toUpperCase(), GEO.centroX, fy + fh / 2 + 1);
+  }
+  ctx.restore();
+
+  /* ── 9 partidos ── */
+  d.partidos.slice(0, 9).forEach((p, i) => {
+    const y   = GEO.filasY + i * GEO.filaH;
+    const t   = GEO.tile;
+    const cxL = GEO.centroX - GEO.tileSep;
+    const cxV = GEO.centroX + GEO.tileSep;
+    const tileTop = y + 4;
+    const nomY    = y + 74;
+
+    dibujarEscudo(ctx, logos[i * 2],     cxL, tileTop, t, shortEquipo(p.local));
+    dibujarEscudo(ctx, logos[i * 2 + 1], cxV, tileTop, t, shortEquipo(p.visita));
+
+    // VS estilo pincel
+    ctx.save();
+    ctx.translate(GEO.centroX, tileTop + t / 2);
+    ctx.transform(1, 0, -0.28, 1, 0, 0);
+    ctx.font = `italic 900 30px ${EXP.fuente}`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillText('VS', 1.5, 2);
+    ctx.fillStyle = EXP.vs;
+    ctx.fillText('VS', 0, 0);
+    ctx.restore();
+
+    // Nombres de equipo
+    ctx.save();
+    ctx.fillStyle = EXP.texto;
+    ctx.textAlign = 'center';
+    const nL = nombreEquipo(p.local);
+    const nV = nombreEquipo(p.visita);
+    fuenteAjustada(ctx, nL, 18, 800, 138);
+    ctx.fillText(nL, cxL, nomY);
+    fuenteAjustada(ctx, nV, 18, 800, 138);
+    ctx.fillText(nV, cxV, nomY);
+    ctx.restore();
+
+    // Columnas "Marcador": goles + línea punteada
+    [[GEO.marcadorL, p.golesLocal], [GEO.marcadorR, p.golesVisita]].forEach(([mx, goles]) => {
+      ctx.save();
+      ctx.fillStyle = EXP.azul;
+      ctx.textAlign = 'center';
+      ctx.font = `900 36px ${EXP.fuente}`;
+      ctx.fillText(goles, mx, tileTop + t / 2 + 2);
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth   = 1.6;
+      ctx.strokeStyle = EXP.gris;
+      ctx.beginPath();
+      ctx.moveTo(mx - 24, nomY);
+      ctx.lineTo(mx + 24, nomY);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Franja amarilla: fecha | hora
+    const sy = y + 85, sh = 21;
+    ctx.fillStyle = EXP.amarillo;
+    ctx.fillRect(bx, sy, bw, sh);
+    ctx.save();
+    ctx.fillStyle = EXP.texto;
+    ctx.font = `800 18px ${EXP.fuente}`;
+    ctx.textAlign = 'left';
+    ctx.fillText(fechaCortaExport(p.fecha), bx + 12, sy + sh / 2 + 1);
+    ctx.textAlign = 'right';
+    ctx.fillText(p.hora || '--:--', bx + bw - 10, sy + sh / 2 + 1);
+    ctx.restore();
+  });
+
+  return canvas;
+}
+
+/** canvas → Blob (PNG o JPEG) */
+function canvasABlob(canvas, tipo = 'image/png', calidad) {
+  return new Promise((res, rej) => {
+    canvas.toBlob(b => (b ? res(b) : rej(new Error('No se pudo generar la imagen'))), tipo, calidad);
+  });
+}
+
+/** Nombre de archivo seguro */
+function nombreArchivoExport(ext) {
+  const nombre = document.getElementById('nombreJugador').textContent.trim();
+  const limpio = (nombre && nombre !== '—' ? nombre : 'jugador')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'jugador';
+  return `quiniela-${limpio}.${ext}`;
 }
 
 /**
@@ -2156,7 +2468,7 @@ function capturarCanvas(quiniela, scale) {
  * Devuelve 'share', 'descarga' o 'cancelado'.
  */
 async function compartirODescargar(blob, nombreArchivo, titulo, texto) {
-  const file = new File([blob], nombreArchivo, { type: 'image/png' });
+  const file = new File([blob], nombreArchivo, { type: blob.type || 'image/png' });
 
   try {
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2176,15 +2488,14 @@ async function compartirODescargar(blob, nombreArchivo, titulo, texto) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
   return 'descarga';
 }
 
-/* ── Botón Guardar ── */
+/* ── Botón Guardar (PNG 968×2148) ── */
 document.getElementById('btnGuardar').addEventListener('click', exportarPNG);
 
 async function exportarPNG() {
-  const quiniela = document.getElementById('quiniela');
   const btn = document.getElementById('btnGuardar');
   const textoOriginal = btn.innerHTML;
 
@@ -2192,23 +2503,14 @@ async function exportarPNG() {
   btn.disabled = true;
 
   const nombre = document.getElementById('nombreJugador').textContent.trim() || 'jugador';
-  const nombreArchivo = `quiniela-${nombre.toLowerCase()}.png`;
-  const esMovil = window.innerWidth < 700;
-  const scale = esMovil ? 2 : 3;
-
-  const prev = prepararCaptura(quiniela);
 
   try {
-    await esperarLayout(300);
-
-    const canvas = await capturarCanvas(quiniela, scale);
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-
-    if (!blob) throw new Error('No se pudo generar la imagen');
+    const canvas = await generarCanvasQuiniela();
+    const blob   = await canvasABlob(canvas, 'image/png');
 
     const resultado = await compartirODescargar(
       blob,
-      nombreArchivo,
+      nombreArchivoExport('png'),
       'Mi Quiniela Liga MX',
       `🏆 Quiniela de ${nombre} - Apertura 2026`
     );
@@ -2223,23 +2525,21 @@ async function exportarPNG() {
     console.error(err);
     toast('❌ Error al guardar imagen');
   } finally {
-    restaurarCaptura(quiniela, prev);
     btn.innerHTML = textoOriginal;
     btn.disabled = false;
   }
 }
 
 /* ══════════════════════════════════════════════════════════
-   10. COMPARTIR
-   El botón siempre se muestra (en PC también descarga si no
-   hay Web Share API disponible).
+   10. COMPARTIR (JPEG 968×2148, calidad 0.95)
+   JPEG sin canal alfa: WhatsApp no lo recomprime con
+   fondo negro y pesa mucho menos que el PNG en iPhone.
 ══════════════════════════════════════════════════════════ */
 
 const btnCompartir = document.getElementById('btnCompartir');
 btnCompartir.style.display = 'flex';
 
 btnCompartir.addEventListener('click', async () => {
-  const quiniela = document.getElementById('quiniela');
   const btn = btnCompartir;
   const textoOriginal = btn.innerHTML;
 
@@ -2247,22 +2547,14 @@ btnCompartir.addEventListener('click', async () => {
   btn.disabled = true;
 
   const nombre = document.getElementById('nombreJugador').textContent.trim() || 'Jugador';
-  const nombreArchivo = `quiniela-${nombre.toLowerCase()}.png`;
-  const scale = 2; // Siempre 2: WhatsApp puede rechazar/fallar con PNG enormes en iPhone
-
-  const prev = prepararCaptura(quiniela);
 
   try {
-    await esperarLayout(300);
-
-    const canvas = await capturarCanvas(quiniela, scale);
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-
-    if (!blob) throw new Error('No se pudo generar la imagen');
+    const canvas = await generarCanvasQuiniela();
+    const blob   = await canvasABlob(canvas, 'image/jpeg', 0.95);
 
     const resultado = await compartirODescargar(
       blob,
-      nombreArchivo,
+      nombreArchivoExport('jpg'),
       'Mi Quiniela Liga MX',
       `🏆 Quiniela de ${nombre} - Apertura 2026`
     );
@@ -2277,7 +2569,6 @@ btnCompartir.addEventListener('click', async () => {
     console.error(err);
     toast('❌ Error al compartir. Intenta de nuevo.');
   } finally {
-    restaurarCaptura(quiniela, prev);
     btn.innerHTML = textoOriginal;
     btn.disabled = false;
   }
