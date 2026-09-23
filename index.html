@@ -1358,7 +1358,7 @@ main {
  *  6. Eventos de scores (contenteditable)
  *  7. Modal de login + Modo Admin
  *  8. Panel Admin (toggle sin conflictos CSS)
- *  9. Exportación de imagen (canvas fijo 484×1074 ×2 = 968×2148)
+ *  9. Exportación de imagen (canvas fijo 484×1074 ×2 = 1452×3222)
  * 10. Compartir (JPEG + Web Share API con fallback a descarga)
  * 11. Inicialización
  * ════════════════════════════════════════════════════════════
@@ -2054,7 +2054,7 @@ window.resetearTodo = resetearTodo;
    ──────────────────────────────────────────────────────────
    Ya no se captura el DOM con html2canvas. La imagen se
    dibuja directamente en un <canvas> de tamaño fijo:
-     · Lógico: 484 × 1074  ·  Real: 968 × 2148 (EXPORT_SCALE)
+     · Lógico: 484 × 1074  ·  Real: 1452 × 3222 (EXPORT_SCALE 3)
    Así el archivo SIEMPRE tiene la misma proporción, sin
    importar el ancho de la pantalla, y WhatsApp no agrega
    barras negras. El DOM de la app no se modifica.
@@ -2074,7 +2074,7 @@ window.resetearTodo = resetearTodo;
 
 const EXPORT_W     = 484;
 const EXPORT_H     = 1074;
-const EXPORT_SCALE = 2;
+const EXPORT_SCALE = 3; // 484×1074 → 1452×3222 (más nítido, misma proporción)
 
 /** Colores tomados de :root (los mismos de la página) */
 function coloresExport() {
@@ -2590,7 +2590,7 @@ function dibujarFooterExport(ctx, C, d, y) {
   ctx.restore();
 }
 
-/** Dibuja la quiniela completa y devuelve el canvas 968×2148 */
+/** Dibuja la quiniela completa y devuelve el canvas 1452×3222 */
 async function generarCanvasQuiniela() {
   await cargarFuentesExport();
   const C = coloresExport();
@@ -2687,7 +2687,7 @@ async function compartirODescargar(blob, nombreArchivo, titulo, texto) {
   return 'descarga';
 }
 
-/* ── Botón Guardar (PNG 968×2148) ── */
+/* ── Botón Guardar (PNG 1452×3222) ── */
 document.getElementById('btnGuardar').addEventListener('click', exportarPNG);
 
 async function exportarPNG() {
@@ -2726,7 +2726,7 @@ async function exportarPNG() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   10. COMPARTIR (JPEG 968×2148, calidad 0.95)
+   10. COMPARTIR (JPEG 1452×3222, calidad 0.95)
    JPEG sin canal alfa: WhatsApp no lo recomprime con
    fondo negro y pesa mucho menos que el PNG en iPhone.
 ══════════════════════════════════════════════════════════ */
