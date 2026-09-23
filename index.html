@@ -2058,69 +2058,61 @@ window.resetearTodo = resetearTodo;
    Así el archivo SIEMPRE tiene la misma proporción, sin
    importar el ancho de la pantalla, y WhatsApp no agrega
    barras negras. El DOM de la app no se modifica.
+
+   El diseño replica la tarjeta de la página (mismas
+   variables CSS): header verde-deep con logo, temporada,
+   jornada en amarillo y "Quiniela de [nombre]"; franja
+   dorada; 9 partidos con escudos, marcadores cian,
+   fecha · hora · canales; footer verde-deep.
+
    Datos que se leen del DOM (solo lectura):
-     · #tituloJornada   → "J-N"
-     · #nombreJugador   → nombre en la franja "Marcador"
-     · .partido          → local, visita, fecha, hora
-     · .score            → marcadores capturados
+     · .q-season, #tituloJornada, .q-jugador-label, #nombreJugador
+     · .partido  → local, visita, fecha, hora, canales
+     · .score    → marcadores capturados
+     · .q-footer → texto izquierdo y #q-fecha-gen
 ══════════════════════════════════════════════════════════ */
 
 const EXPORT_W     = 484;
 const EXPORT_H     = 1074;
 const EXPORT_SCALE = 2;
 
-const EXP = {
-  blanco:    '#FFFFFF',
-  amarillo:  '#FFF52D',
-  azul:      '#1565C0',
-  cianTop:   '#5BDCF8',
-  cianBot:   '#0E86D4',
-  cianLinea: '#0A4F8C',
-  jornada:   '#149FE3',
-  texto:     '#111111',
-  gris:      '#5B5B5B',
-  vs:        '#3F4652',
-  marco:     '#E8E08A',
-  marcoLuz:  '#FFFCD8',
-  marcoLinea:'#CFC45C',
-  tileBorde: '#C9CDD2',
-  fuente:    '"Barlow Condensed", "Arial Narrow", "Roboto Condensed", Arial, sans-serif',
-};
+/** Colores tomados de :root (los mismos de la página) */
+function coloresExport() {
+  const cs = getComputedStyle(document.documentElement);
+  const v  = (n, d) => (cs.getPropertyValue(n) || '').trim() || d;
+  return {
+    verde:      v('--verde',      '#60D8DF'),
+    verdeDeep:  v('--verde-deep', '#1A6E73'),
+    verdeMid:   v('--verde-mid',  '#3FC2C9'),
+    verdeLite:  v('--verde-lite', '#E5FBFC'),
+    dorado:     v('--dorado',     '#FFF52D'),
+    doradoDark: v('--dorado-dark','#D4CC00'),
+    doradoMid:  v('--dorado-mid', '#FFF866'),
+    blanco:     v('--blanco',     '#ffffff'),
+    grisBorde:  v('--gris-borde', '#e0e8e4'),
+    grisTexto:  v('--gris-texto', '#5a6b63'),
+    grisDark:   v('--gris-dark',  '#374740'),
+    filaImpar:  '#fafcfb',
+    vs:         '#cccccc',
+  };
+}
+
+const FUENTE_COND = '"Barlow Condensed", "Arial Narrow", "Roboto Condensed", Arial, sans-serif';
+const FUENTE_BODY = '"Barlow", Arial, sans-serif';
 
 /** Geometría (px lógicos, lienzo 484×1074) */
 const GEO = {
-  marcoInset: 5,
-  marcoRadio: 22,
-  headerY:    36,          // centro vertical fila "J-N · APERTURA 2026 · J-N"
-  franjaY:    58,          // franja amarilla "Marcador"
-  franjaH:    30,
-  bandaX:     24,          // borde izquierdo de franjas amarillas
-  bandaW:     436,         // 24 → 460
-  filasY:     92,          // inicio del primer partido
-  filaH:      107,         // 9 × 107 = 963 → termina en 1055
-  centroX:    242,
-  tile:       60,
-  tileSep:    84,          // distancia centro → centro del escudo
-  marcadorL:  64,          // centro columna "Marcador" izquierda
-  marcadorR:  420,         // centro columna "Marcador" derecha
+  headerH:   82,
+  stripeH:   5,
+  filaH:     106,          // 9 × 106 = 954
+  footerH:   33,           // 82 + 5 + 954 + 33 = 1074
+  padX:      16,
+  centroX:   242,
+  logo:      56,
+  equipoCx:  138,          // distancia del centro al centro de cada escudo
+  scoreBox:  52,
+  scoreSep:  44,           // distancia del centro al centro de cada score
 };
-
-const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-/** "2026-09-04" → "04-sep"  (vacío → "--") */
-function fechaCortaExport(iso) {
-  if (!iso) return '--';
-  const d = new Date(iso + 'T12:00:00');
-  if (isNaN(d)) return '--';
-  return `${String(d.getDate()).padStart(2, '0')}-${MESES_CORTOS[d.getMonth()]}`;
-}
-
-/** "JORNADA 7 C26" → "J-7" */
-function jornadaCortaExport(titulo) {
-  const m = (titulo || '').match(/\d+/);
-  if (m) return `J-${m[0]}`;
-  return (titulo || 'J').trim().slice(0, 5).toUpperCase();
-}
 
 /** Carga una imagen del mismo origen; resuelve null si falla */
 const _cacheImg = new Map();
@@ -2141,17 +2133,24 @@ async function cargarLogoExport(id) {
   return (await cargarImagen(logoEquipo(id))) || (await cargarImagen('assets/equipos/default.png'));
 }
 
-/** Espera a que Barlow Condensed esté lista para el canvas */
+/** Espera a que Barlow / Barlow Condensed estén listas para el canvas */
 async function cargarFuentesExport() {
   if (!document.fonts || !document.fonts.load) return;
   try {
     await Promise.all([
+      document.fonts.load(`600 16px "Barlow Condensed"`),
       document.fonts.load(`700 16px "Barlow Condensed"`),
       document.fonts.load(`800 16px "Barlow Condensed"`),
       document.fonts.load(`900 16px "Barlow Condensed"`),
-      document.fonts.load(`italic 800 16px "Barlow Condensed"`),
+      document.fonts.load(`600 16px "Barlow"`),
     ]);
   } catch (e) { /* se usa la fuente de respaldo */ }
+}
+
+/** Texto visible de un selector (solo lectura) */
+function textoDOM(sel, def = '') {
+  const el = document.querySelector(sel);
+  return el ? (el.textContent || '').trim() || def : def;
 }
 
 /** Lee del DOM todo lo necesario para la imagen (sin modificarlo) */
@@ -2163,21 +2162,28 @@ function datosExport() {
   const partidos = Array.from(document.querySelectorAll('#contenedor-partidos .partido')).map(p => {
     const sL = p.querySelector('.score[data-tipo="local"]');
     const sV = p.querySelector('.score[data-tipo="visita"]');
+    let canales = [];
+    try { canales = JSON.parse(p.dataset.canales || '[]'); } catch (e) { canales = []; }
     return {
       local:       p.dataset.local,
       visita:      p.dataset.visita,
       fecha:       p.dataset.fecha || '',
       hora:        p.dataset.hora  || '',
+      canales:     (Array.isArray(canales) ? canales : []).filter(Boolean).slice(0, 4),
       golesLocal:  ((sL && sL.textContent) || '').trim() || '0',
       golesVisita: ((sV && sV.textContent) || '').trim() || '0',
     };
   });
 
-  const titulo = document.getElementById('tituloJornada').textContent.trim();
-  let nombre   = document.getElementById('nombreJugador').textContent.trim();
-  if (nombre === '—') nombre = '';
-
-  return { jornada: jornadaCortaExport(titulo), nombre, partidos };
+  return {
+    temporada:     textoDOM('.q-season', 'APERTURA 26').toUpperCase(),
+    titulo:        textoDOM('#tituloJornada', 'JORNADA').toUpperCase(),
+    labelJugador:  textoDOM('.q-jugador-label', 'Quiniela de').toUpperCase(),
+    nombre:        textoDOM('#nombreJugador', '—').toUpperCase(),
+    footerIzq:     textoDOM('.q-footer-left span', 'Liga MX').toUpperCase(),
+    footerDer:     textoDOM('#q-fecha-gen', '').toUpperCase(),
+    partidos,
+  };
 }
 
 /** Trazo de rectángulo redondeado (compatible con Safari viejo) */
@@ -2197,28 +2203,45 @@ function trazoRedondeado(ctx, x, y, w, h, r) {
 }
 
 /** Fija la fuente reduciendo el tamaño hasta que el texto quepa en maxW */
-function fuenteAjustada(ctx, txt, size, weight, maxW, estilo = 'normal') {
+function fuenteAjustada(ctx, txt, size, weight, maxW, familia = FUENTE_COND) {
   let s = size;
-  ctx.font = `${estilo} ${weight} ${s}px ${EXP.fuente}`;
-  while (maxW && ctx.measureText(txt).width > maxW && s > 8) {
+  ctx.font = `${weight} ${s}px ${familia}`;
+  while (maxW && ctx.measureText(txt).width > maxW && s > 7) {
     s -= 0.5;
-    ctx.font = `${estilo} ${weight} ${s}px ${EXP.fuente}`;
+    ctx.font = `${weight} ${s}px ${familia}`;
   }
   return s;
 }
 
-/** Texto con espaciado entre letras, centrado en cx */
-function textoEspaciado(ctx, txt, cx, y, espacio, modo) {
-  const chars  = Array.from(txt);
-  const anchos = chars.map(c => ctx.measureText(c).width);
-  const total  = anchos.reduce((a, b) => a + b, 0) + espacio * (chars.length - 1);
-  let x = cx - total / 2;
+/** Ancho de un texto con espaciado entre letras */
+function anchoEspaciado(ctx, txt, espacio) {
+  const chars = Array.from(txt);
+  return chars.reduce((a, c) => a + ctx.measureText(c).width, 0) + espacio * Math.max(0, chars.length - 1);
+}
+
+/** Texto con espaciado entre letras (align: left | center | right) */
+function textoEspaciado(ctx, txt, x, y, espacio, align = 'center') {
+  const total = anchoEspaciado(ctx, txt, espacio);
+  let cx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x;
+  ctx.save();
   ctx.textAlign = 'left';
-  chars.forEach((c, i) => {
-    if (modo === 'stroke') ctx.strokeText(c, x, y);
-    else ctx.fillText(c, x, y);
-    x += anchos[i] + espacio;
+  Array.from(txt).forEach(c => {
+    ctx.fillText(c, cx, y);
+    cx += ctx.measureText(c).width + espacio;
   });
+  ctx.restore();
+}
+
+/** Equivalente a --text-stroke: contorno negro + relleno */
+function textoConContorno(ctx, txt, x, y, grosor = 3) {
+  ctx.save();
+  ctx.lineJoin    = 'round';
+  ctx.miterLimit  = 2;
+  ctx.lineWidth   = grosor;
+  ctx.strokeStyle = '#000';
+  ctx.strokeText(txt, x, y);
+  ctx.restore();
+  ctx.fillText(txt, x, y);
 }
 
 /**
@@ -2244,55 +2267,344 @@ function imagenNitida(img, destinoPx) {
   return src;
 }
 
-/** Escudo en tarjeta redondeada tipo ícono (como la referencia) */
-function dibujarEscudo(ctx, img, cx, top, size, fallbackTxt) {
-  const x = cx - size / 2;
-  const r = 9;
+/** Dibuja una imagen con object-fit: contain dentro de una caja */
+function dibujarContain(ctx, img, x, y, w, h) {
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  const k  = Math.min(w / iw, h / ih);
+  const dw = iw * k, dh = ih * k;
+  const fuente = imagenNitida(img, Math.max(dw, dh) * EXPORT_SCALE);
+  ctx.drawImage(fuente, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
 
+/* ── Header: verde-deep + patrón + logo + temporada + jornada + jugador ── */
+function dibujarHeaderExport(ctx, C, d, logoApp) {
+  const H = GEO.headerH;
+
+  ctx.fillStyle = C.verdeDeep;
+  ctx.fillRect(0, 0, EXPORT_W, H);
+
+  // Patrón de líneas a ±60° (igual que .q-header-bg)
   ctx.save();
-  ctx.shadowColor   = 'rgba(0,0,0,0.18)';
-  ctx.shadowBlur    = 4;
-  ctx.shadowOffsetY = 1.5;
-  trazoRedondeado(ctx, x, top, size, size, r);
-  ctx.fillStyle = '#F7F7F7';
-  ctx.fill();
+  ctx.beginPath();
+  ctx.rect(0, 0, EXPORT_W, H);
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(255,245,45,.05)';
+  ctx.lineWidth = 1;
+  const dx = H / Math.tan(Math.PI / 3);
+  for (let x = -dx - 40; x < EXPORT_W + dx + 40; x += 19 / Math.sin(Math.PI / 3)) {
+    ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + dx, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + dx, H); ctx.stroke();
+  }
   ctx.restore();
 
+  // Logo circular (.q-logo-wrap)
+  const r  = 23;
+  const lx = GEO.padX + r;
+  const ly = H / 2;
   ctx.save();
-  trazoRedondeado(ctx, x, top, size, size, r);
-  ctx.clip();
-  if (img) {
-    const fuente = imagenNitida(img, size * EXPORT_SCALE);
-    const iw = fuente.naturalWidth || fuente.width;
-    const ih = fuente.naturalHeight || fuente.height;
-    const k  = Math.min(size / iw, size / ih);
+  ctx.beginPath();
+  ctx.arc(lx, ly, r, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,.12)';
+  ctx.fill();
+  if (logoApp) {
+    ctx.clip();
+    const iw = logoApp.naturalWidth, ih = logoApp.naturalHeight;
+    const k  = Math.max((r * 2) / iw, (r * 2) / ih);            // object-fit: cover
     const dw = iw * k, dh = ih * k;
-    ctx.drawImage(fuente, cx - dw / 2, top + (size - dh) / 2, dw, dh);
-  } else {
-    ctx.fillStyle = EXP.azul;
-    ctx.font = `900 20px ${EXP.fuente}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(fallbackTxt, cx, top + size / 2);
+    ctx.drawImage(imagenNitida(logoApp, r * 2 * EXPORT_SCALE), lx - dw / 2, ly - dh / 2, dw, dh);
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(lx, ly, r - 1, 0, Math.PI * 2);
+  ctx.lineWidth   = 2;
+  ctx.strokeStyle = 'rgba(255,245,45,.35)';
+  ctx.stroke();
+  ctx.restore();
+
+  // Columna derecha: "QUINIELA DE" + nombre
+  const derX = EXPORT_W - GEO.padX;
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.font = `600 9px ${FUENTE_BODY}`;
+  const anchoLabel = anchoEspaciado(ctx, d.labelJugador, 1.2);
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  textoEspaciado(ctx, d.labelJugador, derX, ly - 11, 1.2, 'right');
+
+  ctx.fillStyle = C.dorado;
+  ctx.textAlign = 'right';
+  fuenteAjustada(ctx, d.nombre, 19, 800, 130);
+  const anchoNombre = ctx.measureText(d.nombre).width;
+  textoConContorno(ctx, d.nombre, derX, ly + 6, 3);
+  ctx.restore();
+
+  // Columna central: temporada + jornada + acento
+  const colDer   = Math.max(anchoLabel, anchoNombre);
+  const limiteIz = GEO.padX + r * 2 + 12;
+  const limiteDe = derX - colDer - 12;
+  const maxTit   = Math.max(120, 2 * Math.min(GEO.centroX - limiteIz, limiteDe - GEO.centroX));
+
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.font = `800 10px ${FUENTE_COND}`;
+  textoEspaciado(ctx, d.temporada, GEO.centroX, 19, 2, 'center');
+
+  ctx.fillStyle = C.dorado;
+  ctx.textAlign = 'center';
+  fuenteAjustada(ctx, d.titulo, 32, 900, maxTit);
+  textoConContorno(ctx, d.titulo, GEO.centroX, 44, 3);
+
+  const acc = ctx.createLinearGradient(GEO.centroX - 16, 0, GEO.centroX + 16, 0);
+  acc.addColorStop(0,   'rgba(255,245,45,0)');
+  acc.addColorStop(0.5, C.dorado);
+  acc.addColorStop(1,   'rgba(255,245,45,0)');
+  ctx.fillStyle = acc;
+  ctx.fillRect(GEO.centroX - 16, 64, 32, 2);
+  ctx.restore();
+}
+
+/* ── Franja dorada (.q-stripe) ── */
+function dibujarStripeExport(ctx, C, y) {
+  ctx.fillStyle = C.verdeDeep;
+  ctx.fillRect(0, y, EXPORT_W, GEO.stripeH);
+  const g = ctx.createLinearGradient(0, 0, EXPORT_W, 0);
+  g.addColorStop(0,    'rgba(255,245,45,0)');
+  g.addColorStop(0.10, C.doradoDark);
+  g.addColorStop(0.30, C.dorado);
+  g.addColorStop(0.50, C.doradoMid);
+  g.addColorStop(0.70, C.dorado);
+  g.addColorStop(0.90, C.doradoDark);
+  g.addColorStop(1,    'rgba(255,245,45,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, y + 1, EXPORT_W, 3);
+}
+
+/* ── Score (.score) ── */
+function dibujarScoreExport(ctx, C, cx, cy, goles) {
+  const s = GEO.scoreBox;
+  ctx.save();
+  trazoRedondeado(ctx, cx - s / 2 + 1, cy - s / 2 + 1, s - 2, s - 2, 10);
+  ctx.fillStyle = C.blanco;
+  ctx.fill();
+  ctx.lineWidth   = 2;
+  ctx.strokeStyle = 'rgba(96,216,223,.25)';
+  ctx.stroke();
+
+  ctx.fillStyle    = C.verde;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${goles.length > 1 ? 28 : 31}px ${FUENTE_COND}`;
+  textoConContorno(ctx, goles, cx, cy + 1.5, 3);
+  ctx.restore();
+}
+
+/* ── Fila info: FECHA · HORA  [canales] ── */
+function dibujarInfoExport(ctx, C, p, canalImgs, cy) {
+  const fecha = formatFecha(p.fecha);
+  const hora  = formatHora(p.hora);
+  const GAP   = 7;
+  const CH    = 17;          // alto de logos de canal
+  const CMAX  = 50;          // ancho máx. por logo de canal
+  const MAXW  = EXPORT_W - GEO.padX * 2;
+
+  ctx.save();
+  ctx.textBaseline = 'middle';
+
+  // Medición
+  ctx.font = `800 14px ${FUENTE_COND}`;
+  const wFecha = anchoEspaciado(ctx, fecha, 0.4);
+  const wHora  = hora ? ctx.measureText(hora).width : 0;
+  ctx.font = `400 12px ${FUENTE_COND}`;
+  const wSep   = hora ? ctx.measureText('·').width : 0;
+
+  const piezas = p.canales.map((cid, k) => {
+    const img = canalImgs[k];
+    if (img) {
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const w  = Math.min(CMAX, (iw / ih) * CH);
+      return { tipo: 'img', img, w };
+    }
+    const txt = nombreCanal(cid).toUpperCase();
+    ctx.font = `800 12px ${FUENTE_COND}`;
+    return { tipo: 'txt', txt, w: ctx.measureText(txt).width + 14 };
+  });
+  const wCanales = piezas.reduce((a, c) => a + c.w, 0) + Math.max(0, piezas.length - 1) * 6;
+
+  let total = wFecha + (hora ? GAP + wSep + GAP + wHora : 0) + (piezas.length ? GAP + wCanales : 0);
+  const k   = total > MAXW ? (MAXW - (total - wCanales)) / wCanales : 1;
+  if (k < 1) total = total - wCanales + wCanales * k;
+
+  // Dibujo
+  let x = GEO.centroX - total / 2;
+
+  ctx.fillStyle = C.grisTexto;
+  ctx.font = `800 14px ${FUENTE_COND}`;
+  textoEspaciado(ctx, fecha, x, cy, 0.4, 'left');
+  x += wFecha;
+
+  if (hora) {
+    x += GAP;
+    ctx.fillStyle = C.grisBorde;
+    ctx.font = `400 12px ${FUENTE_COND}`;
+    ctx.textAlign = 'left';
+    ctx.fillText('·', x, cy);
+    x += wSep + GAP;
+
+    ctx.fillStyle = C.verdeMid;
+    ctx.font = `800 14px ${FUENTE_COND}`;
+    textoConContorno(ctx, hora, x, cy, 2.6);
+    x += wHora;
+  }
+
+  if (piezas.length) x += GAP;
+  piezas.forEach((c, i) => {
+    const w = c.w * k;
+    if (c.tipo === 'img') {
+      dibujarContain(ctx, c.img, x, cy - (CH * k) / 2, w, CH * k);
+    } else {
+      trazoRedondeado(ctx, x, cy - 9 * k, w, 18 * k, 3);
+      ctx.fillStyle = C.verdeLite;
+      ctx.fill();
+      ctx.fillStyle = C.verdeDeep;
+      ctx.textAlign = 'center';
+      ctx.font = `800 ${12 * k}px ${FUENTE_COND}`;
+      ctx.fillText(c.txt, x + w / 2, cy + 0.5);
+      ctx.textAlign = 'left';
+    }
+    x += w + (i < piezas.length - 1 ? 6 * k : 0);
+  });
+
+  ctx.restore();
+}
+
+/* ── Partido (.partido) ── */
+function dibujarPartidoExport(ctx, C, p, i, y, logoL, logoV, canalImgs, esUltimo) {
+  const H = GEO.filaH;
+
+  ctx.fillStyle = i % 2 === 0 ? C.filaImpar : C.blanco;
+  ctx.fillRect(0, y, EXPORT_W, H);
+  if (!esUltimo) {
+    ctx.fillStyle = C.grisBorde;
+    ctx.fillRect(0, y + H - 1, EXPORT_W, 1);
+  }
+
+  // Número de partido
+  ctx.save();
+  ctx.fillStyle    = C.dorado;
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = `700 12px ${FUENTE_COND}`;
+  textoConContorno(ctx, String(i + 1), GEO.padX - 2, y + 13, 2.6);
+  ctx.restore();
+
+  const cxL   = GEO.centroX - GEO.equipoCx;
+  const cxV   = GEO.centroX + GEO.equipoCx;
+  const L     = GEO.logo;
+  const logoY = y + 9;
+  const nomY  = y + 74;
+  const midY  = y + 46;
+
+  // Escudos
+  [[logoL, cxL, p.local], [logoV, cxV, p.visita]].forEach(([img, cx, id]) => {
+    if (img) {
+      dibujarContain(ctx, img, cx - L / 2, logoY, L, L);
+    } else {
+      ctx.save();
+      ctx.fillStyle = C.verde;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `900 22px ${FUENTE_COND}`;
+      ctx.fillText(shortEquipo(id), cx, logoY + L / 2);
+      ctx.restore();
+    }
+  });
+
+  // Nombres
+  ctx.save();
+  ctx.fillStyle    = C.grisDark;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  const nL = nombreEquipo(p.local).toUpperCase();
+  const nV = nombreEquipo(p.visita).toUpperCase();
+  fuenteAjustada(ctx, nL, 14, 800, 140);
+  ctx.fillText(nL, cxL, nomY);
+  fuenteAjustada(ctx, nV, 14, 800, 140);
+  ctx.fillText(nV, cxV, nomY);
+  ctx.restore();
+
+  // Scores + divisor VS
+  dibujarScoreExport(ctx, C, GEO.centroX - GEO.scoreSep, midY, p.golesLocal);
+  dibujarScoreExport(ctx, C, GEO.centroX + GEO.scoreSep, midY, p.golesVisita);
+
+  ctx.save();
+  ctx.fillStyle = C.grisBorde;
+  trazoRedondeado(ctx, GEO.centroX - 7, midY - 10, 14, 2, 1); ctx.fill();
+  trazoRedondeado(ctx, GEO.centroX - 7, midY + 8,  14, 2, 1); ctx.fill();
+  ctx.fillStyle    = C.vs;
+  ctx.font = `900 11px ${FUENTE_COND}`;
+  ctx.textBaseline = 'middle';
+  textoEspaciado(ctx, 'VS', GEO.centroX + 0.75, midY, 1.5, 'center');
+  ctx.restore();
+
+  // Fecha · hora · canales
+  dibujarInfoExport(ctx, C, p, canalImgs, y + 94);
+}
+
+/* ── Footer (.q-footer) ── */
+function dibujarFooterExport(ctx, C, d, y) {
+  const H  = GEO.footerH;
+  const cy = y + H / 2;
+
+  ctx.fillStyle = C.verdeDeep;
+  ctx.fillRect(0, y, EXPORT_W, H);
+
+  // Ícono (círculo + estrella del SVG del footer)
+  ctx.save();
+  ctx.translate(GEO.padX, cy - 7);
+  ctx.scale(0.7, 0.7);
+  ctx.globalAlpha = 0.6 * 0.55;
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle   = '#fff';
+  ctx.lineWidth   = 1.5;
+  ctx.beginPath(); ctx.arc(10, 10, 9, 0, Math.PI * 2); ctx.stroke();
+  if (typeof Path2D !== 'undefined') {
+    ctx.fill(new Path2D('M10 6l1.5 3h3l-2.5 1.8 1 3L10 12l-3 1.8 1-3L5.5 9h3z'));
   }
   ctx.restore();
 
   ctx.save();
-  trazoRedondeado(ctx, x + 0.5, top + 0.5, size - 1, size - 1, r);
-  ctx.lineWidth   = 1;
-  ctx.strokeStyle = EXP.tileBorde;
-  ctx.stroke();
+  ctx.textBaseline = 'middle';
+  ctx.font = `600 11px ${FUENTE_COND}`;
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  textoEspaciado(ctx, d.footerIzq, GEO.padX + 20, cy, 0.6, 'left');
+
+  ctx.fillStyle = 'rgba(255,255,255,.2)';
+  ctx.fillRect(GEO.centroX - 0.5, cy - 6, 1, 12);
+
+  if (d.footerDer) {
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    textoEspaciado(ctx, d.footerDer, EXPORT_W - GEO.padX, cy, 0.6, 'right');
+  }
   ctx.restore();
 }
 
 /** Dibuja la quiniela completa y devuelve el canvas 968×2148 */
 async function generarCanvasQuiniela() {
   await cargarFuentesExport();
+  const C = coloresExport();
   const d = datosExport();
+  const partidos = d.partidos.slice(0, 9);
 
-  const [ligaLogo, ...logos] = await Promise.all([
-    cargarImagen('assets/liga-mx-logo.png'),
-    ...d.partidos.flatMap(p => [cargarLogoExport(p.local), cargarLogoExport(p.visita)]),
+  const logoAppSrc = (document.querySelector('.q-logo-wrap img') || {}).getAttribute
+    ? document.querySelector('.q-logo-wrap img').getAttribute('src')
+    : 'assets/OH.jpeg';
+
+  const [logoApp, logosEquipos, logosCanales] = await Promise.all([
+    cargarImagen(logoAppSrc || 'assets/OH.jpeg'),
+    Promise.all(partidos.map(p => Promise.all([cargarLogoExport(p.local), cargarLogoExport(p.visita)]))),
+    Promise.all(partidos.map(p => Promise.all(p.canales.map(cid => cargarImagen(logoCanal(cid)))))),
   ]);
 
   const canvas = document.createElement('canvas');
@@ -2302,145 +2614,28 @@ async function generarCanvasQuiniela() {
   ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.textBaseline = 'middle';
 
-  /* ── Fondo blanco total (sin transparencias → sin negro en WhatsApp) ── */
-  ctx.fillStyle = EXP.blanco;
+  /* Fondo opaco total (sin transparencias → sin negro en WhatsApp) */
+  ctx.fillStyle = C.blanco;
   ctx.fillRect(0, 0, EXPORT_W, EXPORT_H);
 
-  /* ── Marco redondeado crema/dorado ── */
-  const mi = GEO.marcoInset;
-  ctx.save();
-  trazoRedondeado(ctx, mi, mi, EXPORT_W - mi * 2, EXPORT_H - mi * 2, GEO.marcoRadio);
-  ctx.lineWidth   = 6;
-  ctx.strokeStyle = EXP.marco;
-  ctx.stroke();
-  trazoRedondeado(ctx, mi + 1, mi + 1, EXPORT_W - (mi + 1) * 2, EXPORT_H - (mi + 1) * 2, GEO.marcoRadio - 1);
-  ctx.lineWidth   = 1.5;
-  ctx.strokeStyle = EXP.marcoLuz;
-  ctx.stroke();
-  trazoRedondeado(ctx, mi + 4, mi + 4, EXPORT_W - (mi + 4) * 2, EXPORT_H - (mi + 4) * 2, GEO.marcoRadio - 4);
-  ctx.lineWidth   = 1;
-  ctx.strokeStyle = EXP.marcoLinea;
-  ctx.stroke();
-  ctx.restore();
+  dibujarHeaderExport(ctx, C, d, logoApp);
 
-  /* ── Encabezado: J-N · [logo] APERTURA 2026 [logo] · J-N ── */
-  const hy = GEO.headerY;
-  ctx.save();
-  ctx.fillStyle = EXP.jornada;
-  fuenteAjustada(ctx, d.jornada, 24, 900, 58, 'italic');
-  ctx.textAlign = 'center';
-  ctx.fillText(d.jornada, 52, hy + 1);
-  ctx.fillText(d.jornada, EXPORT_W - 52, hy + 1);
-  ctx.restore();
+  let y = GEO.headerH;
+  dibujarStripeExport(ctx, C, y);
+  y += GEO.stripeH;
 
-  if (ligaLogo) {
-    const ls = 34;
-    const lk = imagenNitida(ligaLogo, ls * EXPORT_SCALE);
-    ctx.drawImage(lk, 106 - ls / 2, hy - ls / 2, ls, ls);
-    ctx.drawImage(lk, EXPORT_W - 106 - ls / 2, hy - ls / 2, ls, ls);
-  }
-
-  ctx.save();
-  ctx.font = `900 27px ${EXP.fuente}`;
-  const grad = ctx.createLinearGradient(0, hy - 13, 0, hy + 13);
-  grad.addColorStop(0, EXP.cianTop);
-  grad.addColorStop(1, EXP.cianBot);
-  ctx.lineJoin    = 'round';
-  ctx.lineWidth   = 2.4;
-  ctx.strokeStyle = EXP.cianLinea;
-  textoEspaciado(ctx, 'APERTURA 2026', GEO.centroX, hy + 1, 2.2, 'stroke');
-  ctx.fillStyle = grad;
-  textoEspaciado(ctx, 'APERTURA 2026', GEO.centroX, hy + 1, 2.2, 'fill');
-  ctx.restore();
-
-  /* ── Franja amarilla "Marcador" ── */
-  const fy = GEO.franjaY, fh = GEO.franjaH, bx = GEO.bandaX, bw = GEO.bandaW;
-  ctx.fillStyle = EXP.amarillo;
-  ctx.fillRect(bx, fy, bw, fh);
-
-  ctx.save();
-  ctx.fillStyle = EXP.azul;
-  ctx.font = `800 18px ${EXP.fuente}`;
-  ctx.textAlign = 'left';
-  ctx.fillText('Marcador', bx + 7, fy + fh / 2 + 1);
-  ctx.textAlign = 'right';
-  ctx.fillText('Marcador', bx + bw - 7, fy + fh / 2 + 1);
-  if (d.nombre) {
-    ctx.fillStyle = EXP.texto;
-    ctx.textAlign = 'center';
-    fuenteAjustada(ctx, d.nombre.toUpperCase(), 17, 800, 220);
-    ctx.fillText(d.nombre.toUpperCase(), GEO.centroX, fy + fh / 2 + 1);
-  }
-  ctx.restore();
-
-  /* ── 9 partidos ── */
-  d.partidos.slice(0, 9).forEach((p, i) => {
-    const y   = GEO.filasY + i * GEO.filaH;
-    const t   = GEO.tile;
-    const cxL = GEO.centroX - GEO.tileSep;
-    const cxV = GEO.centroX + GEO.tileSep;
-    const tileTop = y + 4;
-    const nomY    = y + 74;
-
-    dibujarEscudo(ctx, logos[i * 2],     cxL, tileTop, t, shortEquipo(p.local));
-    dibujarEscudo(ctx, logos[i * 2 + 1], cxV, tileTop, t, shortEquipo(p.visita));
-
-    // VS estilo pincel
-    ctx.save();
-    ctx.translate(GEO.centroX, tileTop + t / 2);
-    ctx.transform(1, 0, -0.28, 1, 0, 0);
-    ctx.font = `italic 900 30px ${EXP.fuente}`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.fillText('VS', 1.5, 2);
-    ctx.fillStyle = EXP.vs;
-    ctx.fillText('VS', 0, 0);
-    ctx.restore();
-
-    // Nombres de equipo
-    ctx.save();
-    ctx.fillStyle = EXP.texto;
-    ctx.textAlign = 'center';
-    const nL = nombreEquipo(p.local);
-    const nV = nombreEquipo(p.visita);
-    fuenteAjustada(ctx, nL, 18, 800, 138);
-    ctx.fillText(nL, cxL, nomY);
-    fuenteAjustada(ctx, nV, 18, 800, 138);
-    ctx.fillText(nV, cxV, nomY);
-    ctx.restore();
-
-    // Columnas "Marcador": goles + línea punteada
-    [[GEO.marcadorL, p.golesLocal], [GEO.marcadorR, p.golesVisita]].forEach(([mx, goles]) => {
-      ctx.save();
-      ctx.fillStyle = EXP.azul;
-      ctx.textAlign = 'center';
-      ctx.font = `900 36px ${EXP.fuente}`;
-      ctx.fillText(goles, mx, tileTop + t / 2 + 2);
-      ctx.setLineDash([4, 3]);
-      ctx.lineWidth   = 1.6;
-      ctx.strokeStyle = EXP.gris;
-      ctx.beginPath();
-      ctx.moveTo(mx - 24, nomY);
-      ctx.lineTo(mx + 24, nomY);
-      ctx.stroke();
-      ctx.restore();
-    });
-
-    // Franja amarilla: fecha | hora
-    const sy = y + 85, sh = 21;
-    ctx.fillStyle = EXP.amarillo;
-    ctx.fillRect(bx, sy, bw, sh);
-    ctx.save();
-    ctx.fillStyle = EXP.texto;
-    ctx.font = `800 18px ${EXP.fuente}`;
-    ctx.textAlign = 'left';
-    ctx.fillText(fechaCortaExport(p.fecha), bx + 12, sy + sh / 2 + 1);
-    ctx.textAlign = 'right';
-    ctx.fillText(p.hora || '--:--', bx + bw - 10, sy + sh / 2 + 1);
-    ctx.restore();
+  partidos.forEach((p, i) => {
+    dibujarPartidoExport(
+      ctx, C, p, i, y,
+      logosEquipos[i][0], logosEquipos[i][1],
+      logosCanales[i],
+      i === partidos.length - 1
+    );
+    y += GEO.filaH;
   });
+
+  dibujarFooterExport(ctx, C, d, EXPORT_H - GEO.footerH);
 
   return canvas;
 }
